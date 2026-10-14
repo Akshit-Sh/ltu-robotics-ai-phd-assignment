@@ -24,3 +24,6 @@ Thumbs.db
 # Temporary simulation output
 *.tmp
 *.bak
+
+# Local backups; do not commit
+/backups/

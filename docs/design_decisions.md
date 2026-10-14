@@ -1,3 +1,4 @@
+
 # Design Decisions
 
 ## 1. Development Environment
@@ -28,6 +29,14 @@ Each robot uses a separate ROS 2 namespace: `r0`, `r1`, and `r2`.
 Robot-specific topics include `/rX/cmd_vel`, `/rX/scan`,
 `/rX/imu`, and `/rX/odom`.
 
+RGB-D camera topics are also namespaced. They include:
+
+- `/rX/camera/color/image_raw`
+- `/rX/camera/color/camera_info`
+- `/rX/camera/depth/image_raw`
+- `/rX/camera/depth/camera_info`
+- `/rX/camera/depth/points`
+
 This arrangement separates robot commands and sensor streams and
 makes it possible to address each robot independently.
 
@@ -50,41 +59,97 @@ topics. The verified dynamic transform chains include:
 - `r2/odom` -> `r2/base_footprint`
 
 Static transforms for the robot links, including the base, IMU,
-LiDAR, and caster links, were also verified for all three robots.
+LiDAR, and caster links, were verified for all three robots.
+
+Each robot's RGB-D camera publishes images with a frame ID following
+the pattern `rX/camera_link`. Static transforms were added from
+`rX/base_link` to `rX/camera_link` using a configured translation
+of 0.08 m in x and 0.12 m in z, with zero rotation.
+
+The `odom` -> `camera_link` transform lookup returned valid
+transforms for all three robots. Initial frame-discovery warnings
+appeared before valid results were returned.
 
 The purpose of the prefixes is to avoid collisions between robot
 frame IDs in the shared TF system.
 
-## 5. Sensor Rate Measurements
+## 5. Sensor Configuration and Rate Measurements
+
+### 5.1 LiDAR
 
 LiDAR messages were observed on `/r0/scan`, `/r1/scan`, and
-`/r2/scan`. During one Gazebo/WSL session, approximate observed
-publication rates were:
+`/r2/scan`. The LiDAR sensor is configured for a 5 Hz update rate.
 
-| Topic | Observed rate |
+Observed rates during the Gazebo/WSL sessions were lower than the
+configured rate:
+
+| Topic | Earlier observed rate | Later short measurement |
+|---|---:|---:|
+| `/r0/scan` | 4.0 Hz | Not individually isolated |
+| `/r1/scan` | 4.0 Hz | Not individually isolated |
+| `/r2/scan` | 3.4 Hz | Not individually isolated |
+
+A later short check showed rates in the approximate range of
+3.2–3.6 Hz across the three robots. These measurements are
+session-specific and are not guaranteed rates.
+
+### 5.2 RGB-D Cameras
+
+Each robot model includes a simulated depth camera with RGB and
+depth image streams.
+
+| Parameter | Configuration |
+|---|---|
+| Image resolution | 320 x 240 pixels |
+| Configured update rate | 10 Hz |
+| Horizontal field of view | 1.047 rad |
+| Near clipping distance | 0.10 m |
+| Far clipping distance | 8.0 m |
+| Camera frame | `rX/camera_link` |
+
+RGB image, depth image, camera information, and depth point-cloud
+topics were discovered for all three robots.
+
+Short measurements produced the following preliminary observations:
+
+| Sensor stream | Preliminary observed rate |
 |---|---:|
-| `/r0/scan` | 4.0 Hz |
-| `/r1/scan` | 4.0 Hz |
-| `/r2/scan` | 3.4 Hz |
+| RGB, r0 | Approximately 6.7 Hz |
+| RGB, r1 | Approximately 7.0 Hz |
+| RGB, r2 | Stable measurement not obtained |
+| Depth, across available checks | Approximately 6.5–7.2 Hz |
 
-These are session-specific measurements, not configured targets or
-guaranteed rates. The difference between the observed rates and the
-expected sensor performance requires further investigation.
+The measurements were collected using short-lived ROS CLI processes
+in Gazebo under WSL2. Startup warnings and ROS context shutdown
+errors occurred during some checks. Therefore, these values should
+be treated as preliminary observations, not definitive performance
+benchmarks.
+
+The configured update rate is a target, not proof that the target
+is achieved. Longer-duration measurements and performance analysis
+remain necessary.
 
 ## 6. Current Scope and Limitations
 
-The current baseline verifies robot spawning, namespaced command and
-sensor topics, odometry, and robot TF frames.
+The current baseline verifies:
+
+- Three TurtleBot3 Burger robots spawning in one Gazebo world.
+- Namespaced command, odometry, IMU, and LiDAR topics.
+- Robot-specific TF frames and static robot-link transforms.
+- RGB and depth image topics for all three robot models.
+- Camera frame IDs and static base-to-camera transforms.
+- Preliminary LiDAR and camera publication-rate measurements.
+- Command isolation in the previously tested `r0` movement case.
 
 The following are not yet considered implemented or verified:
 
-- RGB-D camera integration for every robot.
-- A complete mapping workflow.
+- A complete multi-robot mapping workflow.
 - Nav2 configuration and navigation tests for every robot.
 - Centralized allocation and execution of ten unique waypoints.
 - Robot-failure detection and recovery.
 - Semantic scene-graph grounding and plan validation.
 - Event-driven mission replanning.
+- Long-duration sensor-rate and simulation-performance benchmarks.
 
 These items must be implemented and tested before the corresponding
 assignment requirements can be marked complete.
@@ -95,3 +160,7 @@ Measured results, tested behavior, design intentions, and planned
 features should be reported separately. A feature is not considered
 verified solely because its software package is installed or because
 its implementation is planned.
+
+Rate measurements should include their observation conditions and
+limitations. Future performance claims should be supported by
+repeatable measurements rather than configured sensor rates alone.
