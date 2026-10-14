@@ -1,10 +1,13 @@
-# ROS 2 / colcon generated files
+# ROS 2 / colcon generated files (any directory level)
+**/build/
+**/install/
+**/log/
 ros2_ws/build/
 ros2_ws/install/
 ros2_ws/log/
 
 # Python generated files
-__pycache__/
+**/__pycache__/
 *.py[cod]
 .venv/
 venv/
