@@ -1,0 +1,23 @@
+# ROS 2 / colcon generated files
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# Python generated files
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local secrets
+.env
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temporary simulation output
+*.tmp
+*.bak
