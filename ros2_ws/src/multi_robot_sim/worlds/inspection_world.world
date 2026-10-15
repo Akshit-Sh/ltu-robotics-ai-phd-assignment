@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="inspection_world">
+    <include><uri>model://ground_plane</uri></include>
+    <include><uri>model://sun</uri></include>
+
+    <model name="north_wall">
+      <static>true</static>
+      <pose>0 4 0.3 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box>
+          <size>8 0.15 0.6</size>
+        </box></geometry></collision>
+        <visual name="visual"><geometry><box>
+          <size>8 0.15 0.6</size>
+        </box></geometry></visual>
+      </link>
+    </model>
+
+    <model name="south_wall">
+      <static>true</static>
+      <pose>0 -4 0.3 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box>
+          <size>8 0.15 0.6</size>
+        </box></geometry></collision>
+        <visual name="visual"><geometry><box>
+          <size>8 0.15 0.6</size>
+        </box></geometry></visual>
+      </link>
+    </model>
+
+    <model name="east_wall">
+      <static>true</static>
+      <pose>4 0 0.3 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box>
+          <size>0.15 8 0.6</size>
+        </box></geometry></collision>
+        <visual name="visual"><geometry><box>
+          <size>0.15 8 0.6</size>
+        </box></geometry></visual>
+      </link>
+    </model>
+
+    <model name="west_wall">
+      <static>true</static>
+      <pose>-4 0 0.3 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box>
+          <size>0.15 8 0.6</size>
+        </box></geometry></collision>
+        <visual name="visual"><geometry><box>
+          <size>0.15 8 0.6</size>
+        </box></geometry></visual>
+      </link>
+    </model>
+
+    <model name="block_a">
+      <static>true</static>
+      <pose>-2.8 -1.6 0.3 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box>
+          <size>0.6 0.6 0.6</size>
+        </box></geometry></collision>
+        <visual name="visual"><geometry><box>
+          <size>0.6 0.6 0.6</size>
+        </box></geometry></visual>
+      </link>
+    </model>
+
+    <model name="block_b">
+      <static>true</static>
+      <pose>1.4 -2.5 0.3 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box>
+          <size>0.8 0.4 0.6</size>
+        </box></geometry></collision>
+        <visual name="visual"><geometry><box>
+          <size>0.8 0.4 0.6</size>
+        </box></geometry></visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

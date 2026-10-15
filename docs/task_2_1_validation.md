@@ -36,8 +36,19 @@ Environment: ROS 2 Humble, Ubuntu 22.04, Gazebo Classic (headless)
 - The observed final completed set contained wp01 through wp10.
 - This was a software-level availability test, not physical hardware failure.
 
+## Mapping results
+- Ran SLAM Toolbox while the mission executed in the bounded inspection world.
+- Saved map image and metadata: maps/inspection_map.pgm and
+  maps/inspection_map.yaml.
+- Grid dimensions: 152 x 160 cells; resolution: 0.05 m/cell.
+- Physical extent: 7.60 x 8.00 m; total cells: 24,320.
+- Free: 14,616 cells (60.1%).
+- Occupied: 830 cells (3.4%).
+- Unknown: 8,874 cells (36.5%).
+- Known-cell coverage: 63.5%.
+- Cell statistics show partial map coverage; geometric accuracy has not been
+  validated against a ground-truth map.
+
 ## Remaining limitation
-- SLAM mapping evidence remains preliminary; the earlier map was sparse and
-  mostly unknown. Further mapping validation is needed if required by the task.
 - The controller uses odometry-based motion and a forward LiDAR stop guard,
   not global path planning or guaranteed collision avoidance.
