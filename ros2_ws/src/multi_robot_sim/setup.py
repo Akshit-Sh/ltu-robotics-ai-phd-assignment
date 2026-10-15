@@ -37,5 +37,7 @@ setup(
     description='Multi-robot Gazebo simulation for the LTU Robotics and AI assignment',
     license='Apache-2.0',
     extras_require={'test': ['pytest']},
-    entry_points={'console_scripts': []},
+    entry_points={'console_scripts': [
+        'waypoint_planner = multi_robot_sim.waypoint_planner:main',
+    ]},
 )
