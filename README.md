@@ -21,9 +21,9 @@ The project is being developed incrementally, with an emphasis on reproducible e
 | RGB-D camera topics | Verified for all three robots |
 | Camera frame IDs | Checked for `r0` RGB and depth images |
 | Base-to-camera static TF | Verified for all three robots |
-| SLAM / mapping | Pending |
-| Nav2 navigation | Pending |
-| Centralized ten-waypoint planner | Pending |
+| SLAM / mapping | Executed; map saved |
+| Nav2 global planning | Not implemented or validated |
+| Ten-waypoint mission | Completed in simulation |
 | Semantic mission planning and event-driven replanning | Pending |
 
 Statuses reflect work completed and tested so far; pending components are not represented as implemented.
@@ -171,7 +171,7 @@ The following checks have been completed in the development environment:
 
 ### Preliminary Observed Sensor Rates
 
-The LiDAR is configured for 5 Hz and the cameras for 10 Hz. The observed rates were lower in the current Gazebo/WSL environment.
+The LiDAR and cameras are configured for 10 Hz. The LiDAR measurements in the table below are earlier preliminary results from before the LiDAR update; a later run measured approximately 8.7 Hz. Actual rates vary with Gazebo/WSL simulation load.
 
 | Sensor stream | Preliminary observed rate |
 |---|---:|
@@ -189,10 +189,10 @@ These values are preliminary observations, not guaranteed performance figures. M
 
 - The simulation uses TurtleBot3 Burger models.
 - Sensor publication rates are below their configured targets in the observed sessions; the cause has not yet been isolated.
-- A complete SLAM and mapping workflow has not yet been implemented or verified.
-- Nav2 has not yet been configured and tested for all three robots.
-- The centralized planner for ten unique waypoints has not yet been implemented.
-- Robot-failure detection and recovery remain pending.
+- SLAM Toolbox was run and a map was saved; ground-truth map accuracy has not been evaluated.
+- Full Nav2 global planning has not been configured and validated for all three robots.
+- The ten-waypoint mission and centralized execution were tested in simulation.
+- Software-level failure-event handling and reassignment were tested; physical failure modes remain untested.
 - Semantic scene-graph grounding, plan validation, scripted mission events, and event-driven replanning remain pending.
 - Long-duration sensor-rate and simulation-performance benchmarks remain pending.
 - The current work is simulation-based; no physical robot deployment is claimed.
@@ -202,10 +202,10 @@ These values are preliminary observations, not guaranteed performance figures. M
 The next stages are:
 
 1. Investigate simulation timing and sensor publication rates.
-2. Implement and evaluate mapping.
+2. Improve mapping coverage and evaluate the saved map against ground truth.
 3. Configure and test Nav2 independently for each robot.
-4. Implement centralized assignment of ten unique waypoints without duplicate visits.
-5. Add robot-failure handling and evaluate recovery.
+4. Preserve the ten-waypoint mission tests and document their results.
+5. Extend failure-recovery testing to additional failure scenarios.
 6. Develop semantic mission planning, scene-graph grounding, plan validation, and event-driven replanning.
 7. Document long-term inspection autonomy challenges, the research problem, and the literature review.
 8. Complete reproducibility instructions, test evidence, and the final assignment report.
