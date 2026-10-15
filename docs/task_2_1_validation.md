@@ -29,8 +29,15 @@ Environment: ROS 2 Humble, Ubuntu 22.04, Gazebo Classic (headless)
 - Ctrl+C logged that robots were being stopped, with no shutdown traceback.
 - Latest package test summary: 8 tests, 0 errors, 0 failures, 1 skipped.
 
-## Remaining validation
-- Deliberately fail one robot and verify reassignment of its unfinished work.
-- Improve and validate mapping evidence; the earlier SLAM map was sparse and
-  mostly unknown.
-- Preserve run logs and document limitations in the final report.
+## Robot-failure recovery
+- Injected mission-level failure for r0 through /mission/failed_robot.
+- The executor emitted ROBOT_FAILED and redistributed four unfinished goals.
+- r1 and r2 continued executing the reassigned mission.
+- The observed final completed set contained wp01 through wp10.
+- This was a software-level availability test, not physical hardware failure.
+
+## Remaining limitation
+- SLAM mapping evidence remains preliminary; the earlier map was sparse and
+  mostly unknown. Further mapping validation is needed if required by the task.
+- The controller uses odometry-based motion and a forward LiDAR stop guard,
+  not global path planning or guaranteed collision avoidance.
