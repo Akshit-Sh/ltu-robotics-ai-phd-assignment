@@ -39,5 +39,7 @@ setup(
     extras_require={'test': ['pytest']},
     entry_points={'console_scripts': [
         'waypoint_planner = multi_robot_sim.waypoint_planner:main',
+        'waypoint_navigator = multi_robot_sim.waypoint_navigator:main',
+        'mission_executor = multi_robot_sim.mission_executor:main',
     ]},
 )
