@@ -24,7 +24,7 @@ The project is being developed incrementally, with an emphasis on reproducible e
 | SLAM / mapping | Executed; map saved |
 | Nav2 global planning | Not implemented or validated |
 | Ten-waypoint mission | Completed in simulation |
-| Semantic mission planning and event-driven replanning | Pending |
+| Semantic planning baseline and event-driven replanning | Implemented (16 tests passed) |
 
 Statuses reflect work completed and tested so far; pending components are not represented as implemented.
 
@@ -185,6 +185,25 @@ The LiDAR and cameras are configured for 10 Hz. The LiDAR measurements in the ta
 
 These values are preliminary observations, not guaranteed performance figures. Measurements used short-lived ROS CLI processes, and some checks showed startup or ROS context shutdown warnings. Longer-duration measurements under controlled conditions are needed for reliable benchmarking.
 
+## Task 2.2 — Semantic Planning Baseline
+
+- `config/semantic/scene_graph.json` stores configured robots, inspection locations, obstacles, and relations. It is configured world knowledge, not an automatically perceived scene graph.
+- `semantic_planner.py` grounds recognized location names in natural-language requests and creates structured tasks.
+- `semantic_validator.py` rejects malformed plans, unsupported actions, unknown locations or robots, unavailable robots, and duplicate task IDs.
+- `semantic_events.py` demonstrates robot-unavailability and target-unavailability events, replanning against updated state.
+- The current implementation is deterministic. Foundation-model integration, prompt/model configuration, and comparison against the baseline remain pending. Semantic plans are not yet connected to robot execution.
+
+Reproduce the baseline after building and sourcing the workspace:
+
+```bash
+ros2 run multi_robot_sim semantic_planner
+ros2 run multi_robot_sim semantic_events
+colcon test --packages-select multi_robot_sim --event-handlers console_direct+
+```
+
+The latest test run reported 16 passed, 1 skipped, and 0 failures.
+
+
 ## Current Limitations
 
 - The simulation uses TurtleBot3 Burger models.
@@ -193,7 +212,7 @@ These values are preliminary observations, not guaranteed performance figures. M
 - Full Nav2 global planning has not been configured and validated for all three robots.
 - The ten-waypoint mission and centralized execution were tested in simulation.
 - Software-level failure-event handling and reassignment were tested; physical failure modes remain untested.
-- Semantic scene-graph grounding, plan validation, scripted mission events, and event-driven replanning remain pending.
+- Deterministic semantic planning and scripted event replanning are implemented; foundation-model integration remains pending.
 - Long-duration sensor-rate and simulation-performance benchmarks remain pending.
 - The current work is simulation-based; no physical robot deployment is claimed.
 

@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "world": "inspection_world",
+  "robots": [
+    {"id": "r0", "namespace": "/r0"},
+    {"id": "r1", "namespace": "/r1"},
+    {"id": "r2", "namespace": "/r2"}
+  ],
+  "locations": [
+    {"id": "inspection_origin", "x": 0.0, "y": 0.0, "type": "start_area"},
+    {"id": "inspection_east", "x": 3.0, "y": 1.0, "type": "inspection_area"},
+    {"id": "inspection_north", "x": 1.0, "y": 3.0, "type": "inspection_area"},
+    {"id": "inspection_west", "x": -2.0, "y": 2.0, "type": "inspection_area"},
+    {"id": "inspection_south", "x": -1.0, "y": -1.0, "type": "inspection_area"}
+  ],
+  "objects": [
+    {"id": "block_a", "type": "obstacle", "x": -2.8, "y": -1.6, "status": "static"},
+    {"id": "block_b", "type": "obstacle", "x": 1.4, "y": -2.5, "status": "static"}
+  ],
+  "relations": [
+    {"subject": "block_a", "predicate": "located_in", "object": "inspection_world"},
+    {"subject": "block_b", "predicate": "located_in", "object": "inspection_world"},
+    {"subject": "r0", "predicate": "operates_in", "object": "inspection_world"},
+    {"subject": "r1", "predicate": "operates_in", "object": "inspection_world"},
+    {"subject": "r2", "predicate": "operates_in", "object": "inspection_world"}
+  ]
+}
