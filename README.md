@@ -198,7 +198,7 @@ These values are preliminary observations, not guaranteed performance figures. M
 ### Validation and event-driven replanning
 
 - An end-to-end test successfully generated and validated an inspection task targeting `inspection_east` with robot `r0`.
-- An invalid-target test is intended to demonstrate rejection of an unknown location such as `made_up_room`; retain the rejection claim only after recording its actual output.
+- Invalid-target rejection was verified directly: a plan targeting `made_up_room` returned `valid: false` with the error `unknown target 'made_up_room'` and was rejected before execution.
 - `semantic_events.py` demonstrates two scripted events: a robot becoming unavailable and an inspection target becoming unavailable. The resulting plans are validated against the updated state.
 - The event demonstration currently uses the deterministic planner. It is not evidence that Qwen regenerates plans after every event.
 - Semantic planning and event handling are software-level demonstrations and are not connected to physical robot execution.
@@ -218,8 +218,7 @@ ros2 run multi_robot_sim semantic_events
 colcon test --packages-select multi_robot_sim --event-handlers console_direct+
 ```
 
-The latest regression run reported 16 passed, 1 skipped, and 0 failures. Python lint tooling emitted deprecation warnings that did not fail the tests.
-
+The latest regression run reported 23 passed, 1 skipped, and 0 failures. Python lint tooling emitted deprecation warnings that did not fail the tests.
 The model-backed planner has been tested on a representative unambiguous mission. Broader evaluation of ambiguous requests, model failure, grounding accuracy, and performance against the deterministic baseline remains pending.
 
 ## Current Limitations
@@ -243,7 +242,7 @@ The next stages are:
 3. Configure and test Nav2 independently for each robot.
 4. Preserve the ten-waypoint mission tests and document their results.
 5. Extend failure-recovery testing to additional failure scenarios.
-6. Develop semantic mission planning, scene-graph grounding, plan validation, and event-driven replanning.
+6. Extend the implemented semantic planning baseline, scene-graph grounding, plan validation, and scripted event replanning; evaluate broader language coverage and model failure cases.
 7. Document long-term inspection autonomy challenges, the research problem, and the literature review.
 8. Complete reproducibility instructions, test evidence, and the final assignment report.
 
