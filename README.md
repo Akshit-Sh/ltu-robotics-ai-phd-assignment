@@ -185,24 +185,42 @@ The LiDAR and cameras are configured for 10 Hz. The LiDAR measurements in the ta
 
 These values are preliminary observations, not guaranteed performance figures. Measurements used short-lived ROS CLI processes, and some checks showed startup or ROS context shutdown warnings. Longer-duration measurements under controlled conditions are needed for reliable benchmarking.
 
-## Task 2.2 — Semantic Planning Baseline
+## Task 2.2 — Language-Grounded Semantic Planning
 
-- `config/semantic/scene_graph.json` stores configured robots, inspection locations, obstacles, and relations. It is configured world knowledge, not an automatically perceived scene graph.
-- `semantic_planner.py` grounds recognized location names in natural-language requests and creates structured tasks.
-- `semantic_validator.py` rejects malformed plans, unsupported actions, unknown locations or robots, unavailable robots, and duplicate task IDs.
-- `semantic_events.py` demonstrates robot-unavailability and target-unavailability events, replanning against updated state.
-- The current implementation is deterministic. Foundation-model integration, prompt/model configuration, and comparison against the baseline remain pending. Semantic plans are not yet connected to robot execution.
+### Scene graph and grounding
 
-Reproduce the baseline after building and sourcing the workspace:
+- `config/semantic/scene_graph.json` defines the configured robots, inspection locations, obstacles, and relations. This is configured world knowledge, not an automatically perceived scene graph.
+- `semantic_planner.py` provides the deterministic natural-language planning baseline.
+- `llm_semantic_planner.py` integrates the locally hosted Qwen 2.5 1.5B model through the Ollama HTTP API. It requests a structured JSON plan and grounds targets against configured location IDs.
+- The model-backed planner normalises supported action names, maps accepted location aliases to configured IDs, and checks plans using `semantic_validator.py`.
+- The validator rejects malformed plans, unsupported actions, unknown targets or robots, unavailable robots, and duplicate task IDs.
+
+### Validation and event-driven replanning
+
+- An end-to-end test successfully generated and validated an inspection task targeting `inspection_east` with robot `r0`.
+- An invalid-target test is intended to demonstrate rejection of an unknown location such as `made_up_room`; retain the rejection claim only after recording its actual output.
+- `semantic_events.py` demonstrates two scripted events: a robot becoming unavailable and an inspection target becoming unavailable. The resulting plans are validated against the updated state.
+- The event demonstration currently uses the deterministic planner. It is not evidence that Qwen regenerates plans after every event.
+- Semantic planning and event handling are software-level demonstrations and are not connected to physical robot execution.
+
+### Model and reproducibility
+
+- Model: `qwen2.5:1.5b`, run locally with Ollama.
+- The prompt requests JSON containing a `tasks` list with `task_id`, `action`, `target`, and robot assignment. It restricts actions and entity IDs to the configured scene graph and asks for an empty task list when the request is ambiguous or unsupported.
+- The model-backed command is `llm_semantic_planner`.
+
+After building and sourcing the workspace, reproduce the demonstrations:
 
 ```bash
 ros2 run multi_robot_sim semantic_planner
+ros2 run multi_robot_sim llm_semantic_planner
 ros2 run multi_robot_sim semantic_events
 colcon test --packages-select multi_robot_sim --event-handlers console_direct+
 ```
 
-The latest test run reported 16 passed, 1 skipped, and 0 failures.
+The latest regression run reported 16 passed, 1 skipped, and 0 failures. Python lint tooling emitted deprecation warnings that did not fail the tests.
 
+The model-backed planner has been tested on a representative unambiguous mission. Broader evaluation of ambiguous requests, model failure, grounding accuracy, and performance against the deterministic baseline remains pending.
 
 ## Current Limitations
 
@@ -212,7 +230,7 @@ The latest test run reported 16 passed, 1 skipped, and 0 failures.
 - Full Nav2 global planning has not been configured and validated for all three robots.
 - The ten-waypoint mission and centralized execution were tested in simulation.
 - Software-level failure-event handling and reassignment were tested; physical failure modes remain untested.
-- Deterministic semantic planning and scripted event replanning are implemented; foundation-model integration remains pending.
+- Deterministic semantic planning, a locally hosted Qwen 2.5 1.5B planner, and scripted event replanning are implemented. Model-backed planning has been tested on a representative mission; broader evaluation remains pending.
 - Long-duration sensor-rate and simulation-performance benchmarks remain pending.
 - The current work is simulation-based; no physical robot deployment is claimed.
 

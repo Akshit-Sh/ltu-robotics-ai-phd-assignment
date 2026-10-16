@@ -42,6 +42,7 @@ setup(
         'waypoint_navigator = multi_robot_sim.waypoint_navigator:main',
         'mission_executor = multi_robot_sim.mission_executor:main',
         'semantic_planner = multi_robot_sim.semantic_planner:main',
+        'llm_semantic_planner = multi_robot_sim.llm_semantic_planner:main',
         'semantic_events = multi_robot_sim.semantic_events:main',
     ]},
 )
