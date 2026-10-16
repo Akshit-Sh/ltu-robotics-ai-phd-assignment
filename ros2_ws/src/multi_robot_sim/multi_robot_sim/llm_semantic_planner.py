@@ -73,10 +73,13 @@ def _normalise_and_ground(raw_plan, scene_graph, unavailable_robots=None):
         if action not in {"inspect", "observe", "navigate"}:
             errors.append(f"tasks[{index}]: unsupported action '{action}'.")
             continue
-
         requested_robot = task.get("robot", task.get("robot_id"))
         if requested_robot not in robots:
-            requested_robot = robots[index % len(robots)]
+            errors.append(
+                f"tasks[{index}]: robot '{requested_robot}' is "
+                "unknown or unavailable."
+            )
+            continue
 
         grounded.append({
             "task_id": str(task.get("task_id") or f"llm_{index + 1:03d}"),

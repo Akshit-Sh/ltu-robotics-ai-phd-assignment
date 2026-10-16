@@ -2,9 +2,13 @@
 
 import unittest
 from pathlib import Path
+from unittest.mock import patch
+
+import requests
 
 from multi_robot_sim.llm_semantic_planner import (
     _normalise_and_ground,
+    plan_mission_with_llm,
 )
 from multi_robot_sim.semantic_validator import load_scene_graph
 
@@ -96,8 +100,46 @@ class TestLLMSemanticPlanner(unittest.TestCase):
             raw, self.scene, unavailable_robots=["r0"]
         )
 
-        self.assertEqual(errors, [])
-        self.assertNotEqual(plan["tasks"][0]["robot"], "r0")
+        self.assertTrue(any("unknown or unavailable" in e for e in errors))
+        self.assertEqual(plan["tasks"], [])
+
+    def test_unknown_robot_is_rejected(self):
+        raw = {"tasks": [{
+            "task_id": "task_001", "action": "inspect",
+            "target": "inspection_east", "robot": "r99",
+        }]}
+        plan, errors = _normalise_and_ground(raw, self.scene)
+        self.assertEqual(plan["tasks"], [])
+        self.assertTrue(any("unknown or unavailable" in e for e in errors))
+
+    @patch(
+        "multi_robot_sim.llm_semantic_planner.requests.post",
+        side_effect=requests.ConnectionError("Ollama unavailable"),
+    )
+    def test_ollama_connection_error_uses_fallback(self, mock_post):
+        plan, result = plan_mission_with_llm(
+            "Inspect inspection_east using robot r0.", self.scene
+        )
+        self.assertEqual(result["source"], "deterministic_fallback")
+        self.assertIn("Ollama unavailable", result["model_error"])
+        self.assertTrue(result["valid"])
+        self.assertTrue(plan["tasks"])
+        mock_post.assert_called_once()
+
+    @patch("multi_robot_sim.llm_semantic_planner.requests.post")
+    def test_malformed_llm_json_uses_fallback(self, mock_post):
+        mock_post.return_value.json.return_value = {
+            "response": '{"tasks": [invalid json]}'
+        }
+
+        plan, result = plan_mission_with_llm(
+            "Inspect inspection_east using robot r0.", self.scene
+        )
+
+        self.assertEqual(result["source"], "deterministic_fallback")
+        self.assertTrue(result["valid"])
+        self.assertTrue(plan["tasks"])
+        mock_post.assert_called_once()
 
     def test_no_available_robots_rejects_plan(self):
         plan, errors = _normalise_and_ground(

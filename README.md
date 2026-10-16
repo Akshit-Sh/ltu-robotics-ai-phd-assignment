@@ -218,7 +218,7 @@ ros2 run multi_robot_sim semantic_events
 colcon test --packages-select multi_robot_sim --event-handlers console_direct+
 ```
 
-The latest regression run reported 23 passed, 1 skipped, and 0 failures. Python lint tooling emitted deprecation warnings that did not fail the tests.
+The latest regression run reported 27 tests, 0 errors, 0 failures, and 1 skipped. Python lint tooling emitted deprecation warnings that did not fail the tests.
 The model-backed planner has been tested on a representative unambiguous mission. Broader evaluation of ambiguous requests, model failure, grounding accuracy, and performance against the deterministic baseline remains pending.
 
 ## Current Limitations
