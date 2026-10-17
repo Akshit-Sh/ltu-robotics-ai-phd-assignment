@@ -141,6 +141,25 @@ class TestLLMSemanticPlanner(unittest.TestCase):
         self.assertTrue(plan["tasks"])
         mock_post.assert_called_once()
 
+    @patch("multi_robot_sim.llm_semantic_planner.requests.post")
+    def test_empty_ollama_plan_is_rejected_without_fallback(self, mock_post):
+        mock_post.return_value.json.return_value = {
+            "response": '{"tasks":[]}'
+        }
+
+        plan, result = plan_mission_with_llm(
+            "Inspect the thing over there.", self.scene
+        )
+
+        self.assertEqual(result["source"], "ollama")
+        self.assertFalse(result["valid"])
+        self.assertEqual(plan["tasks"], [])
+        self.assertTrue(result["errors"])
+        self.assertTrue(any(
+            "non-empty tasks list" in error for error in result["errors"]
+        ))
+        mock_post.assert_called_once()
+
     def test_no_available_robots_rejects_plan(self):
         plan, errors = _normalise_and_ground(
             {"tasks": [{

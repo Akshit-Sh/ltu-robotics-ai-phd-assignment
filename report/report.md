@@ -16,9 +16,20 @@ Short measurements in the WSL2 environment were below configured sensor rates. R
 
 ### Waypoint mission and recovery
 
-A centralized waypoint controller executed a mission containing ten unique waypoints, wp01–wp10, with a goal tolerance of 0.15 m. The successful run emitted `MISSION_COMPLETE`, included all ten waypoint IDs in the completed set, and ended with empty unresolved and failed-robot lists. Recorded goal errors were approximately 0.143–0.150 m.
+A centralized waypoint executor ran ten unique waypoints, wp01–wp10, with a goal tolerance of 0.15 m. In the successful A*-enabled Gazebo run, the executor emitted `MISSION_COMPLETE`, recorded all ten waypoint IDs as completed, and ended with empty unresolved and failed-robot lists. The logged final goal distances were approximately 0.048–0.050 m.
 
-The controller uses odometry-based motion control and a forward LiDAR stopping guard. It stops for close returns at 0.45 m and resumes when the return exceeds 0.60 m. Blocked goals can be requeued and retried. This is a reactive guard and retry mechanism, not global path planning, and it does not guarantee collision-free motion.
+Navigation combines a custom A* grid planner with odometry-based path following and a forward LiDAR stop guard. The planner parses the known static collision-box geometry from the Gazebo SDF world, uses a 0.10 m grid resolution and 0.22 m obstacle inflation, and simplifies the resulting route using line-of-sight checks. The safety guard stops for close forward returns at 0.45 m and resumes after clearance exceeds 0.60 m. A separate test across `block_b` found a four-point route with 0.70 m maximum lateral deviation from the direct line. This is static-world planning, not Nav2; dynamic obstacle rerouting and guaranteed collision avoidance have not been established.
+
+The corrected-world integration run on 18 October 2026 used
+`inspection_world.world`, with the boundary walls and static obstacles visible
+in Gazebo. After the executor started, it reported `MISSION_COMPLETE` with
+wp01–wp10 completed and empty `unresolved` and `failed_robots` lists. Logged
+goal distances were approximately 0.048–0.050 m, within the 0.15 m tolerance.
+The run also logged multiple `OBSTACLE_STOP` and `OBSTACLE_CLEARED` transitions,
+including during wp03, wp04, and wp07. This is evidence of the configured
+forward LiDAR stop/resume guard in this run, not a guarantee of collision-free
+motion or dynamic-obstacle rerouting.
+
 
 A software-level failure was injected for r0 through the mission failure interface. The executor reported `ROBOT_FAILED` and redistributed four unfinished goals to r1 and r2. The final completed set again contained wp01–wp10. This experiment demonstrates mission-level availability handling in simulation; it is not a test of physical hardware failure.
 
@@ -26,9 +37,12 @@ A software-level failure was injected for r0 through the mission failure interfa
 
 SLAM Toolbox was run during the mission, producing `maps/inspection_map.pgm` and `maps/inspection_map.yaml`. The map contains 152 × 160 cells at 0.05 m resolution, corresponding to a 7.60 × 8.00 m extent. Cell statistics were 60.1% free, 3.4% occupied, and 36.5% unknown, giving 63.5% known-cell coverage. The map is partial. Its geometric accuracy was not evaluated against a ground-truth map.
 
+![Partial SLAM Toolbox occupancy map (152 × 160 cells at 0.05 m resolution; 63.5% known-cell coverage). The enlarged PNG is for display only; the underlying map resolution remains 0.05 m.](../maps/inspection_map_large.png){#fig:slam-map width=55%}
+
+
 ### Limitations
 
-The experiments verify a bounded simulation workflow, not a complete autonomous navigation stack. Nav2 global planning and guaranteed collision avoidance were not implemented or validated. Sensor-rate observations were short, and mapping accuracy remains unmeasured.
+The experiments verify a bounded simulation workflow, not a complete autonomous navigation stack. A custom A* global path planner was implemented and tested against static geometry from the SDF world; Nav2 was not configured or validated. The planner does not plan from the saved SLAM map, and the safety guard is not a guarantee of collision-free motion. Sensor-rate observations were short, and mapping accuracy remains unmeasured.
 
 ## 2.2 Language-Grounded Semantic Planning and Event Handling
 
@@ -36,7 +50,10 @@ The experiments verify a bounded simulation workflow, not a complete autonomous 
 
 The configured scene graph in `config/semantic/scene_graph.json` represents the inspection world, three robots, five named locations, two static obstacles, and their relations. It represents configured world knowledge rather than an automatically perceived scene. Metric attributes include location and obstacle-centre coordinates; semantic attributes include entity types, obstacle status, robot namespaces, and relations.
 
-An explicit hierarchy is represented as **world → entity-category groups → configured entities**. The world root contains robot, location, and object groups, whose leaves reference IDs in the corresponding entity collections. `validate_scene_hierarchy()` checks the root, groups, entity references, duplicate references, and coverage of configured entities. Tests verify a valid hierarchy and rejection of a dangling location reference.
+An explicit hierarchy is represented as **world → entity-category groups → configured entities**.
+
+![Configured semantic hierarchy for inspection_world, showing the robot, location, and object groups and their entity IDs. This is configured scene knowledge, not automatically perceived scene structure.](../figures/semantic_hierarchy.png){#fig:semantic-hierarchy width=68%}
+ The world root contains robot, location, and object groups, whose leaves reference IDs in the corresponding entity collections. `validate_scene_hierarchy()` checks the root, groups, entity references, duplicate references, and coverage of configured entities. Tests verify a valid hierarchy and rejection of a dangling location reference.
 
 The deterministic baseline in `semantic_planner.py` grounds explicitly mentioned location IDs and underscore-separated names. It selects `inspect`, `observe`, or `navigate` using keyword rules and distributes tasks round-robin over available robots. It is reproducible but does not perform advanced language understanding, explicit ambiguity resolution, dependency decomposition, or cost-optimised allocation.
 
@@ -59,17 +76,17 @@ Mission: {natural-language mission request}
 
 The Ollama request uses JSON output mode, non-streaming generation, and temperature 0. No fine-tuning is used.
 
-The validation layer checks plan structure, non-empty task lists, task objects, unique task IDs, supported actions, known targets, known robots, and robot availability. It also validates the configured hierarchy when present. Unexpected field types are rejected instead of causing set-membership type errors. Regression tests cover invalid plans, alias grounding, invented targets, unavailable robots, and an empty model response for an ambiguity-oriented request. The mocked response verifies response handling; it does not establish that the model reliably resolves every kind of ambiguity.
+The validation layer checks plan structure, non-empty task lists, task objects, unique task IDs, supported actions, known targets, known robots, and robot availability. It also validates the configured hierarchy when present. Unexpected field types are rejected instead of causing set-membership type errors. Regression tests cover invalid plans, alias grounding, invented targets, unavailable robots, and an empty model response for an ambiguity-oriented request. The mocked response verifies response handling; it does not establish that the model reliably resolves every kind of ambiguity. When Ollama returns the prompt's empty-task abstention response, the full planner marks it invalid and does not invoke the deterministic fallback; a regression test covers this path. The deterministic fallback is used for request or response-parsing exceptions and is separately validated.
 
 ### Event-driven replanning
 
-The `semantic_events.py` demonstration applies two scripted events: `robot_unavailable` and `target_unavailable`. An unavailable robot is excluded from subsequent assignments. An unavailable target is recorded as blocked and removed from both the active location collection and its hierarchy group, keeping grounding and hierarchy validation consistent. Blocked work is not counted as completed work. Tests cover replanning after both events and rejection of unsupported event types.
+The `semantic_events.py` demonstration applies two scripted events: `robot_unavailable` and `target_unavailable`. An unavailable robot is excluded from subsequent assignments. An unavailable target is recorded as blocked and removed from both the active location collection and its hierarchy group, keeping grounding and hierarchy validation consistent. Blocked work is not counted as completed work. In the CLI demonstration, `robot_unavailable` for `r0` reassigned `inspection_east` to `r1` and `inspection_north` to `r2`. The subsequent `target_unavailable` event blocked `inspection_east`, leaving `inspection_north` assigned to `r1`. Both resulting plans had `last_valid: true` and no validation errors. Tests also reject unsupported event types.
 
 This event handler updates planning state and validates the new plan; it is not connected to live Gazebo motion execution. The current system does not demonstrate the LLM regenerating a plan after every event, or enforce sensor-capability, task-dependency, and physical-safety constraints at the semantic-planning layer.
 
 ### Verification results and limitations
 
-The latest clean, isolated ROS 2 package build and test run reports **52 tests, 0 errors, 0 failures, and 1 skipped**. These tests verify configured software behaviour. They do not establish automatic scene perception, reliable ambiguity resolution, or live-robot execution of semantic event replanning.
+The latest ROS 2 package test run collected 53 tests: 52 passed, 1 was skipped, and none failed. Two lint-tool deprecation warnings did not fail the run. As a concrete negative verification case, a plan targeting `unknown_place` was rejected (`valid = false`) with the error `tasks[0]: unknown target 'unknown_place'.` The hierarchy tests also reject a dangling location reference. These tests verify configured software behaviour; they do not establish automatic scene perception, reliable ambiguity resolution, or live-robot execution of semantic event replanning.
 
 ## 2.3 Long-Term Deployment Challenges
 
@@ -164,10 +181,17 @@ Build the ROS 2 package and source the workspace:
 ```bash
 source /opt/ros/humble/setup.bash
 cd ~/ltu_rai_assignment/ros2_ws
-colcon build --packages-select multi_robot_sim
+colcon build --packages-select multi_robot_sim --symlink-install
 source install/setup.bash
 
 ```
+
+
+### Reproducing Task 2.1
+
+Start Gazebo in one terminal using `ros2 launch multi_robot_sim multi_robot.launch.py` after sourcing ROS 2 and the workspace and setting `TURTLEBOT3_MODEL=burger`. In a second sourced terminal, run `ros2 run multi_robot_sim mission_executor`. Leave the mission free of injected failures and verify `MISSION_COMPLETE`, all ten waypoint IDs in `completed`, and empty `unresolved` and `failed_robots` lists in the executor output.
+
+For a separate software-level recovery test, restart the simulation and executor. While `r0` has unfinished work, publish `r0` once on `/mission/failed_robot` using `ros2 topic pub --once /mission/failed_robot std_msgs/msg/String "{data: 'r0'}"`. Observe `ROBOT_FAILED` and reassignment messages. Redistribution depends on injection timing; the recorded run transferred four unfinished goals. This does not simulate physical hardware failure.
 
 Run the semantic planning demonstrations:
 
@@ -184,10 +208,10 @@ colcon test --packages-select multi_robot_sim
 colcon test-result --verbose
 ```
 
-The latest observed test summary was 27 tests, zero errors, zero failures, and one skipped test. Sensor publication rates and mapping coverage were measured in short simulation sessions and should not be interpreted as long-duration performance benchmarks. The waypoint mission, software-level robot-failure recovery, semantic planning, and event handling were tested as described in their respective sections; the semantic pipeline is not connected to physical robot execution.
+The latest observed test summary was 53 tests collected, 52 passed, 1 skipped, and zero failures. Sensor publication rates and mapping coverage were measured in short simulation sessions and should not be interpreted as long-duration performance benchmarks. The waypoint mission, software-level robot-failure recovery, semantic planning, and event handling were tested as described in their respective sections; the semantic pipeline is not connected to physical robot execution.
 
 ## 4. Conclusion
 
 This project establishes a simulation baseline for multi-robot inspection and a separate semantic planning prototype. The three-robot setup, namespaced sensing and control interfaces, ten-waypoint mission, scripted robot-availability recovery, and partial SLAM map were verified in simulation. The semantic planning component grounds requests against configured world knowledge, validates structured tasks, and demonstrates scripted responses to robot and target unavailability.
 
-The results also expose important limits. Sensor rates depend on simulation load, the map has substantial unknown coverage, and the waypoint controller does not provide global path planning or guaranteed collision avoidance. The semantic scene graph is configured rather than automatically perceived, and event handling is not integrated with robot motion execution. These constraints motivate the proposed research on map freshness, capability-aware allocation, and safe replanning under changing conditions.
+The results also expose important limits. Sensor rates depend on simulation load, and the map retains substantial unknown coverage. A custom A* global planner is implemented and tested using static Gazebo SDF geometry rather than the saved SLAM map; this is not Nav2, does not demonstrate dynamic-obstacle rerouting, and does not guarantee collision avoidance. The semantic scene graph is configured rather than automatically perceived, and semantic event handling is not integrated with live robot motion execution. These constraints motivate the proposed research on map freshness, capability-aware allocation, and safe replanning under changing conditions.

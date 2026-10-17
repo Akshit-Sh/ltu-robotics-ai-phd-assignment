@@ -131,7 +131,7 @@ remain necessary.
 
 ## 6. Current Scope and Limitations
 
-The current baseline verifies:
+The verified baseline and subsequent assignment tests cover:
 
 - Three TurtleBot3 Burger robots spawning in one Gazebo world.
 - Namespaced command, odometry, IMU, and LiDAR topics.
@@ -140,19 +140,26 @@ The current baseline verifies:
 - Camera frame IDs and static base-to-camera transforms.
 - Preliminary LiDAR and camera publication-rate measurements.
 - Command isolation in the previously tested `r0` movement case.
+- A custom static-world A* planner using Gazebo SDF geometry, with
+  odometry-based path following and a forward LiDAR stop/resume guard.
+- A simulated mission reaching ten unique waypoints, plus a separate
+  obstacle-detour test.
+- Software-level robot failure/reassignment testing.
+- Semantic scene-graph hierarchy, plan validation, and scripted
+  robot/target-unavailable event handling.
 
-The following are not yet considered implemented or verified:
+The following remain incomplete or unverified:
 
-- A complete multi-robot mapping workflow.
+- A complete multi-robot mapping workflow and ground-truth map-accuracy
+  evaluation.
 - Nav2 configuration and navigation tests for every robot.
-- Centralized allocation and execution of ten unique waypoints.
-- Robot-failure detection and recovery.
-- Semantic scene-graph grounding and plan validation.
-- Event-driven mission replanning.
+- Dynamic-obstacle rerouting and guaranteed collision avoidance.
+- Integration of semantic events with live Gazebo motion and execution.
 - Long-duration sensor-rate and simulation-performance benchmarks.
 
-These items must be implemented and tested before the corresponding
-assignment requirements can be marked complete.
+The A* planner uses static Gazebo SDF geometry rather than the saved SLAM
+map. Scripted semantic events update planning state but do not demonstrate
+live-motion replanning. Results must be reported within these limits.
 
 ## 7. Reproducibility Principle
 

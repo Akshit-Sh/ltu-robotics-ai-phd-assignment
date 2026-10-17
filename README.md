@@ -22,9 +22,10 @@ The project is being developed incrementally, with an emphasis on reproducible e
 | Camera frame IDs | Checked for `r0` RGB and depth images |
 | Base-to-camera static TF | Verified for all three robots |
 | SLAM / mapping | Executed; map saved |
-| Nav2 global planning | Not implemented or validated |
-| Ten-waypoint mission | Completed in simulation |
-| Semantic planning baseline and event-driven replanning | Implemented (16 tests passed) |
+| Custom A* static-world planner | Implemented and tested; uses Gazebo SDF geometry, not the SLAM map |
+| Nav2 global planning | Not configured or validated |
+| Ten-waypoint mission | All 10 waypoints reached in the A*-enabled Gazebo run |
+| Semantic planning baseline and event-driven replanning | Implemented; 53 tests collected: 52 passed, 1 skipped, 0 failed |
 
 Statuses reflect work completed and tested so far; pending components are not represented as implemented.
 
@@ -91,7 +92,7 @@ Open a terminal and run:
 source /opt/ros/humble/setup.bash
 
 cd ~/ltu_rai_assignment/ros2_ws
-colcon build --packages-select multi_robot_sim
+colcon build --packages-select multi_robot_sim --symlink-install
 
 source install/setup.bash
 ```
@@ -119,6 +120,12 @@ The current launch file starts one Gazebo server and GUI and spawns three robots
 | `r0` | 0.0 m | 0.0 m |
 | `r1` | 2.0 m | 0.0 m |
 | `r2` | 0.0 m | 2.0 m |
+
+## Task 2.1 — Mission reproduction
+
+Launch Gazebo using the command above. In a second sourced terminal run `ros2 run multi_robot_sim mission_executor`. Monitor `/mission/status` and wait for `MISSION_COMPLETE`; keep this successful run free of injected failures.
+
+For a separate recovery run, publish `r0` to `/mission/failed_robot` as `std_msgs/msg/String` using `ros2 topic pub --once /mission/failed_robot std_msgs/msg/String "{data: r0}"`. The number of unfinished goals transferred depends on injection timing; the recorded run transferred four. This is a software-level failure simulation, not physical hardware failure.
 
 ## Namespaces and Topics
 
@@ -218,7 +225,7 @@ ros2 run multi_robot_sim semantic_events
 colcon test --packages-select multi_robot_sim --event-handlers console_direct+
 ```
 
-The latest regression run reported 27 tests, 0 errors, 0 failures, and 1 skipped. Python lint tooling emitted deprecation warnings that did not fail the tests.
+The latest regression run collected 53 tests: 52 passed, 1 skipped, 0 failed. Python lint tooling emitted deprecation warnings that did not fail the tests.
 The model-backed planner has been tested on a representative unambiguous mission. Broader evaluation of ambiguous requests, model failure, grounding accuracy, and performance against the deterministic baseline remains pending.
 
 ## Current Limitations
@@ -240,7 +247,7 @@ The next stages are:
 1. Investigate simulation timing and sensor publication rates.
 2. Improve mapping coverage and evaluate the saved map against ground truth.
 3. Configure and test Nav2 independently for each robot.
-4. Preserve the ten-waypoint mission tests and document their results.
+4. Keep the verified A*-enabled waypoint mission and obstacle-detour regression test reproducible.
 5. Extend failure-recovery testing to additional failure scenarios.
 6. Extend the implemented semantic planning baseline, scene-graph grounding, plan validation, and scripted event replanning; evaluate broader language coverage and model failure cases.
 7. Document long-term inspection autonomy challenges, the research problem, and the literature review.

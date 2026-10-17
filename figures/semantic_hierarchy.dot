@@ -1,0 +1,66 @@
+digraph SemanticHierarchy {
+  graph [
+    rankdir=LR,
+    bgcolor="white",
+    pad="0.25",
+    nodesep="0.28",
+    ranksep="0.48",
+    splines=ortho,
+    label="Configured semantic scene graph — inspection_world",
+    labelloc=t,
+    fontsize=18,
+    fontname="DejaVu Sans"
+  ];
+  node [
+    shape=box,
+    style="rounded,filled",
+    fontname="DejaVu Sans",
+    fontsize=10,
+    margin="0.12,0.08",
+    color="#40536D",
+    fillcolor="#F3F6FA",
+    fontcolor="#172B4D"
+  ];
+  edge [
+    color="#63758B",
+    penwidth=1.2,
+    arrowsize=0.7
+  ];
+
+  world [label="World\ninspection_world", fillcolor="#DCE8F7", penwidth=2];
+
+  robot_layer [label="Robot group\nrobot_layer", fillcolor="#D9EEDF"];
+  location_layer [label="Location group\nlocation_layer", fillcolor="#D9EEDF"];
+  object_layer [label="Object group\nobject_layer", fillcolor="#D9EEDF"];
+
+  world -> robot_layer;
+  world -> location_layer;
+  world -> object_layer;
+
+  r0 [label="r0\nnamespace: /r0"];
+  r1 [label="r1\nnamespace: /r1"];
+  r2 [label="r2\nnamespace: /r2"];
+
+  robot_layer -> r0;
+  robot_layer -> r1;
+  robot_layer -> r2;
+
+  origin [label="inspection_origin\n(0.0, 0.0) • start_area"];
+  east [label="inspection_east\n(3.0, 1.0) • inspection_area"];
+  north [label="inspection_north\n(1.0, 3.0) • inspection_area"];
+  west [label="inspection_west\n(-2.0, 2.0) • inspection_area"];
+  south [label="inspection_south\n(-1.0, -1.0) • inspection_area"];
+
+  location_layer -> origin;
+  location_layer -> east;
+  location_layer -> north;
+  location_layer -> west;
+  location_layer -> south;
+
+  block_a [label="block_a\n(-2.8, -1.6) • obstacle\nstatus: static", fillcolor="#FBE5D8"];
+  block_b [label="block_b\n(1.4, -2.5) • obstacle\nstatus: static", fillcolor="#FBE5D8"];
+
+  object_layer -> block_a;
+  object_layer -> block_b;
+
+}

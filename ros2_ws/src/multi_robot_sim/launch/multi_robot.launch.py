@@ -56,13 +56,12 @@ def generate_description(context, *args, **kwargs):
 def generate_launch_description():
     """Launch Gazebo and three namespaced TurtleBot3 robots."""
     package_share = get_package_share_directory('multi_robot_sim')
-    turtlebot_share = get_package_share_directory('turtlebot3_gazebo')
     gazebo_share = get_package_share_directory('gazebo_ros')
 
     world = os.path.join(
-        turtlebot_share,
+        package_share,
         'worlds',
-        'empty_world.world',
+        'inspection_world.world',
     )
 
     actions = [

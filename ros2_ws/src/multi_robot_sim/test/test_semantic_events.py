@@ -72,34 +72,3 @@ class TestSemanticEvents(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-    def test_unavailable_target_is_not_planned(self):
-        plan, state, errors = handle_event(
-            self.request,
-            self.scene,
-            {"type": "target_unavailable", "value": "inspection_east"},
-            self.state,
-        )
-        self.assertEqual(errors, [])
-        self.assertTrue(state["last_valid"])
-        self.assertNotIn(
-            "inspection_east",
-            [task["target"] for task in plan["tasks"]],
-        )
-        self.assertEqual(
-            state["unavailable_targets"], ["inspection_east"]
-        )
-
-    def test_unknown_event_rejected(self):
-        plan, state, errors = handle_event(
-            self.request,
-            self.scene,
-            {"type": "unexpected_event", "value": "x"},
-            self.state,
-        )
-        self.assertIsNone(plan)
-        self.assertTrue(errors)
-
-
-if __name__ == "__main__":
-    unittest.main()
