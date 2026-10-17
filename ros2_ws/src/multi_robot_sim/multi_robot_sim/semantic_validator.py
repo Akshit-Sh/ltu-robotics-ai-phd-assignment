@@ -65,9 +65,11 @@ def validate_plan(plan, scene_graph, unavailable_robots=None):
 
 def main():
     """Run a small command-line validation demonstration."""
-    package_root = Path(__file__).resolve().parents[1]
+    from ament_index_python.packages import get_package_share_directory
+
     scene_path = (
-        package_root / "config" / "semantic" / "scene_graph.json"
+        Path(get_package_share_directory("multi_robot_sim"))
+        / "config" / "semantic" / "scene_graph.json"
     )
     scene = load_scene_graph(scene_path)
 

@@ -52,13 +52,14 @@ def main():
     """Run a demonstration of semantic planning and plan validation."""
     import json
     from pathlib import Path
+    from ament_index_python.packages import get_package_share_directory
     from multi_robot_sim.semantic_validator import (
         load_scene_graph,
         validate_plan,
     )
 
     scene_path = (
-        Path(__file__).resolve().parents[1]
+        Path(get_package_share_directory("multi_robot_sim"))
         / "config" / "semantic" / "scene_graph.json"
     )
     scene = load_scene_graph(scene_path)

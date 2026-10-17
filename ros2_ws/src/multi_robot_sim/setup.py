@@ -22,6 +22,10 @@ setup(
             glob('launch/*.launch.py'),
         ),
         (
+            os.path.join('share', package_name, 'config', 'semantic'),
+            glob('config/semantic/*'),
+        ),
+        (
             os.path.join('share', package_name, 'worlds'),
             glob('worlds/*'),
         ),
@@ -30,7 +34,7 @@ setup(
             glob('models/turtlebot3_burger/*'),
         ),
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools', 'requests'],
     zip_safe=True,
     maintainer='Akshit Sharma',
     maintainer_email='akshitsharma20022@gmail.com',

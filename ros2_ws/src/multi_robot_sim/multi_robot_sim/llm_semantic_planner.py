@@ -162,8 +162,10 @@ Mission: {request}
 
 def main():
     """Run a local LLM semantic-planning demonstration."""
+    from ament_index_python.packages import get_package_share_directory
+
     scene_path = (
-        Path(__file__).resolve().parents[1]
+        Path(get_package_share_directory("multi_robot_sim"))
         / "config" / "semantic" / "scene_graph.json"
     )
     scene = load_scene_graph(scene_path)
