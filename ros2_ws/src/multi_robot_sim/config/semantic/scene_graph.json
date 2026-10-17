@@ -1,6 +1,36 @@
 {
   "schema_version": "1.0",
   "world": "inspection_world",
+  "hierarchy": {
+    "id": "inspection_world",
+    "node_kind": "world",
+    "children": [
+      {
+        "id": "robot_layer",
+        "node_kind": "group",
+        "entity_type": "robot",
+        "children": ["r0", "r1", "r2"]
+      },
+      {
+        "id": "location_layer",
+        "node_kind": "group",
+        "entity_type": "location",
+        "children": [
+          "inspection_origin",
+          "inspection_east",
+          "inspection_north",
+          "inspection_west",
+          "inspection_south"
+        ]
+      },
+      {
+        "id": "object_layer",
+        "node_kind": "group",
+        "entity_type": "object",
+        "children": ["block_a", "block_b"]
+      }
+    ]
+  },
   "robots": [
     {"id": "r0", "namespace": "/r0"},
     {"id": "r1", "namespace": "/r1"},

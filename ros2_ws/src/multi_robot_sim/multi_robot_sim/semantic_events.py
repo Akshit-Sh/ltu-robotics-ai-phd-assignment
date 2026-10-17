@@ -42,6 +42,20 @@ def handle_event(request, scene_graph, event, state):
         if location["id"] not in unavailable_targets
     ]
 
+    # Keep the hierarchy consistent with the active grounding graph.
+    hierarchy = updated_scene.get("hierarchy", {})
+    groups = hierarchy.get("children", []) if isinstance(hierarchy, dict) else []
+    for group in groups:
+        if (
+            isinstance(group, dict)
+            and group.get("entity_type") == "location"
+            and isinstance(group.get("children"), list)
+        ):
+            group["children"] = [
+                location_id for location_id in group["children"]
+                if location_id not in unavailable_targets
+            ]
+
     plan, planning_errors = plan_mission(
         request, updated_scene, sorted(unavailable_robots)
     )

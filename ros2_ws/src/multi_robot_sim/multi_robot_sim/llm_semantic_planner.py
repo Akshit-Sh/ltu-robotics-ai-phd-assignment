@@ -37,14 +37,6 @@ def _normalise_and_ground(raw_plan, scene_graph, unavailable_robots=None):
         "starting area": "inspection_origin",
         "origin": "inspection_origin",
     })
-    location_aliases.update({
-        "east inspection area": "inspection_east",
-        "north inspection area": "inspection_north",
-        "west inspection area": "inspection_west",
-        "south inspection area": "inspection_south",
-        "starting area": "inspection_origin",
-        "origin": "inspection_origin",
-    })
 
     if not robots:
         return {"tasks": []}, ["No available robots."]

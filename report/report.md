@@ -32,23 +32,45 @@ The experiments verify a bounded simulation workflow, not a complete autonomous 
 
 ## 2.2 Language-Grounded Semantic Planning and Event Handling
 
-### Scene representation and planning
+### Scene representation and grounding
 
-The semantic scene graph in `config/semantic/scene_graph.json` contains configured robot and location entities, obstacles, and relations. It represents configured world knowledge rather than an automatically perceived scene.
+The configured scene graph in `config/semantic/scene_graph.json` represents the inspection world, three robots, five named locations, two static obstacles, and their relations. It represents configured world knowledge rather than an automatically perceived scene. Metric attributes include location and obstacle-centre coordinates; semantic attributes include entity types, obstacle status, robot namespaces, and relations.
 
-The deterministic planner, `semantic_planner.py`, grounds location identifiers explicitly mentioned in a request. It selects one of three supported actions—`inspect`, `observe`, or `navigate`—using keyword rules, then assigns tasks round-robin among available robots. This provides a reproducible baseline but does not perform advanced language understanding or cost-optimised allocation.
+An explicit hierarchy is represented as **world → entity-category groups → configured entities**. The world root contains robot, location, and object groups, whose leaves reference IDs in the corresponding entity collections. `validate_scene_hierarchy()` checks the root, groups, entity references, duplicate references, and coverage of configured entities. Tests verify a valid hierarchy and rejection of a dangling location reference.
 
-The model-backed planner, `llm_semantic_planner.py`, uses the locally hosted Qwen 2.5 1.5B model through Ollama. It requests a structured JSON task list, normalises supported actions, and grounds accepted target aliases against configured location identifiers. The validator checks for a non-empty task list, valid task objects, unique task IDs, supported actions, known targets, and known or available robots. Unknown or unavailable robot assignments are rejected rather than silently reassigned.
+The deterministic baseline in `semantic_planner.py` grounds explicitly mentioned location IDs and underscore-separated names. It selects `inspect`, `observe`, or `navigate` using keyword rules and distributes tasks round-robin over available robots. It is reproducible but does not perform advanced language understanding, explicit ambiguity resolution, dependency decomposition, or cost-optimised allocation.
 
-### Event handling and validation
+### Foundation-model planning and verification
 
-The `semantic_events.py` demonstration applies scripted events for an unavailable robot and an unavailable inspection target. After a robot becomes unavailable, the deterministic planner replans using the remaining robots. When a target becomes unavailable, it is removed from the grounding graph and recorded in the event state as blocked, preventing the planner from assigning it again. A blocked target is not treated as completed work.
+The model-backed planner in `llm_semantic_planner.py` is configured to use the local Ollama model tag `qwen2.5:1.5b`. It uses prompt-based structured generation with JSON output mode and temperature 0; no fine-tuning is used. The prompt restricts actions to `inspect`, `observe`, and `navigate`, lists configured location and robot IDs, prohibits invented targets, and requests an empty task list for ambiguous or unknown requests.
 
-Tests cover invalid targets, unsupported actions, unknown and unavailable robots, empty or malformed model output, and fallback behaviour when Ollama is unavailable or returns malformed JSON. The current package test suite reports 27 tests, zero errors, zero failures, and one skipped test.
+The exact prompt template is shown below; brace-delimited lists are populated from the scene graph.
 
-### Limitations
+```text
+You convert a robot mission into a JSON task plan.
+Return JSON only, with this exact structure:
+{"tasks":[{"task_id":"task_001","action":"inspect","target":"inspection_east","robot":"r0"}]}
+Allowed actions: inspect, observe, navigate.
+Use only these exact location IDs: {configured location IDs}
+Use only these robot IDs: {configured robot IDs}
+Do not invent targets. If the request is ambiguous or no target is known, return {"tasks":[]}.
+Mission: {natural-language mission request}
+```
 
-The event demonstration uses the deterministic planner; it does not demonstrate Qwen regenerating a plan after every event. Semantic planning and event handling are not connected to the simulated robots' motion execution. The validator checks structural and entity-level constraints, but does not yet enforce sensor-capability requirements, task dependencies, or physical safety constraints. The scene graph is configured manually and is not automatically updated from sensor observations.
+The Ollama request uses JSON output mode, non-streaming generation, and temperature 0. No fine-tuning is used.
+
+The validation layer checks plan structure, non-empty task lists, task objects, unique task IDs, supported actions, known targets, known robots, and robot availability. It also validates the configured hierarchy when present. Unexpected field types are rejected instead of causing set-membership type errors. Regression tests cover invalid plans, alias grounding, invented targets, unavailable robots, and an empty model response for an ambiguity-oriented request. The mocked response verifies response handling; it does not establish that the model reliably resolves every kind of ambiguity.
+
+### Event-driven replanning
+
+The `semantic_events.py` demonstration applies two scripted events: `robot_unavailable` and `target_unavailable`. An unavailable robot is excluded from subsequent assignments. An unavailable target is recorded as blocked and removed from both the active location collection and its hierarchy group, keeping grounding and hierarchy validation consistent. Blocked work is not counted as completed work. Tests cover replanning after both events and rejection of unsupported event types.
+
+This event handler updates planning state and validates the new plan; it is not connected to live Gazebo motion execution. The current system does not demonstrate the LLM regenerating a plan after every event, or enforce sensor-capability, task-dependency, and physical-safety constraints at the semantic-planning layer.
+
+### Verification results and limitations
+
+The latest clean, isolated ROS 2 package build and test run reports **52 tests, 0 errors, 0 failures, and 1 skipped**. These tests verify configured software behaviour. They do not establish automatic scene perception, reliable ambiguity resolution, or live-robot execution of semantic event replanning.
+
 ## 2.3 Long-Term Deployment Challenges
 
 ### Operational setting
