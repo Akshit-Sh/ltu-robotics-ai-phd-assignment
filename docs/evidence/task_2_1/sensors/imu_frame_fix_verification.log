@@ -1,0 +1,19 @@
+Task 2.1 — Post-fix IMU frame verification
+Environment: ROS 2 Humble, Gazebo Classic, inspection_world.world
+
+Runtime topic header checks:
+  /r0/imu -> frame_id: r0/imu_link
+  /r1/imu -> frame_id: r1/imu_link
+  /r2/imu -> frame_id: r2/imu_link
+
+TF graph verification:
+  r0/imu_link parent: r0/base_link
+  r1/imu_link parent: r1/base_link
+  r2/imu_link parent: r2/base_link
+
+The IMU frame IDs match their corresponding namespaced TF frames.
+The generated TF graph is saved as:
+  docs/evidence/task_2_1/tf/frames_imu_verified.pdf
+
+Note: Initial TF lookups briefly reported frames unavailable while
+transforms were starting. Subsequent checks showed the expected frames.
