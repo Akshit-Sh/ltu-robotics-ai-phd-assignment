@@ -7,6 +7,7 @@ import requests
 
 from multi_robot_sim.semantic_planner import plan_mission
 from multi_robot_sim.semantic_validator import (
+    extract_requested_targets,
     load_scene_graph,
     validate_plan,
 )
@@ -126,7 +127,10 @@ Mission: {request}
             request, scene_graph, unavailable_robots
         )
         valid, validation_errors = validate_plan(
-            fallback_plan, scene_graph, unavailable_robots
+            fallback_plan, scene_graph, unavailable_robots,
+            required_targets=extract_requested_targets(
+                request, scene_graph
+            ),
         )
         return fallback_plan, {
             "source": "deterministic_fallback",
@@ -139,7 +143,10 @@ Mission: {request}
         raw_plan, scene_graph, unavailable_robots
     )
     valid, validation_errors = validate_plan(
-        plan, scene_graph, unavailable_robots
+        plan, scene_graph, unavailable_robots,
+        required_targets=extract_requested_targets(
+            request, scene_graph
+        ),
     )
     errors = grounding_errors + validation_errors
 

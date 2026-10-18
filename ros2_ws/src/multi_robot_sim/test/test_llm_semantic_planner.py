@@ -175,6 +175,27 @@ class TestLLMSemanticPlanner(unittest.TestCase):
         self.assertEqual(plan["tasks"], [])
         self.assertTrue(any("No available robots" in e for e in errors))
 
+    @patch("multi_robot_sim.llm_semantic_planner.requests.post")
+    def test_incomplete_llm_plan_is_rejected_for_missing_requested_target(
+        self, mock_post
+    ):
+        mock_post.return_value.json.return_value = {
+            "response": (
+                '{"tasks":[{"task_id":"task_001","action":"inspect",'
+                '"target":"inspection_east","robot":"r0"}]}'
+            )
+        }
+        plan, result = plan_mission_with_llm(
+            "Inspect inspection_east and inspection_north.", self.scene
+        )
+        self.assertEqual(result["source"], "ollama")
+        self.assertFalse(result["valid"])
+        self.assertTrue(any(
+            "omits requested target 'inspection_north'" in error
+            for error in result["errors"]
+        ))
+        mock_post.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

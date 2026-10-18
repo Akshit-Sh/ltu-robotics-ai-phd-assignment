@@ -54,6 +54,7 @@ def main():
     from pathlib import Path
     from ament_index_python.packages import get_package_share_directory
     from multi_robot_sim.semantic_validator import (
+        extract_requested_targets,
         load_scene_graph,
         validate_plan,
     )
@@ -65,7 +66,10 @@ def main():
     scene = load_scene_graph(scene_path)
     request = "Inspect inspection_east and inspection_north"
     plan, planning_errors = plan_mission(request, scene)
-    valid, validation_errors = validate_plan(plan, scene)
+    valid, validation_errors = validate_plan(
+        plan, scene,
+        required_targets=extract_requested_targets(request, scene),
+    )
 
     print(json.dumps({
         "request": request,
