@@ -159,6 +159,42 @@ def test_unknown_target_is_not_mislabeled_as_ambiguous(scene):
     ) == []
 
 
+
+def test_llm_abstention_response_is_rejected_without_fallback(
+    scene, monkeypatch
+):
+    class FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"response": '{"tasks": []}'}
+
+    def fake_post(url, json, timeout):
+        assert "If the request is ambiguous" in json["prompt"]
+        assert 'return {"tasks":[]}' in json["prompt"]
+        return FakeResponse()
+
+    def unexpected_fallback(*args, **kwargs):
+        raise AssertionError(
+            "An explicit LLM abstention must not trigger fallback planning"
+        )
+
+    monkeypatch.setattr(
+        "multi_robot_sim.llm_semantic_planner.requests.post", fake_post
+    )
+    monkeypatch.setattr(
+        "multi_robot_sim.llm_semantic_planner.plan_mission",
+        unexpected_fallback,
+    )
+
+    plan, result = plan_mission_with_llm("Do something useful.", scene)
+
+    assert plan == {"tasks": []}
+    assert result["source"] == "ollama"
+    assert result["valid"] is False
+
+
 def test_robot_unavailable_event_replans(scene):
     request = "Inspect inspection_east and inspection_north"
     state = {
