@@ -1,6 +1,7 @@
 """LLM-backed semantic planner with scene-graph grounding and validation."""
 
 import json
+import re
 from pathlib import Path
 
 import requests
@@ -14,6 +15,51 @@ from multi_robot_sim.semantic_validator import (
 
 OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
 MODEL_NAME = "qwen2.5:1.5b"
+
+
+def _detect_ambiguous_request(request, scene_graph):
+    """Return candidate location IDs when a vague area reference is ambiguous."""
+    text = str(request).lower().replace("_", " ").replace("-", " ")
+
+    # Explicitly collective requests are not ambiguous.
+    if re.search(
+        r"\b(all|every|each)\s+(?:of\s+the\s+)?"
+        r"(?:inspection\s+)?areas\b",
+        text,
+    ):
+        return []
+
+    # If known locations were explicitly mentioned, let normal grounding handle
+    # the request instead of mistaking an intentional multi-target mission
+    # for ambiguity.
+    explicit = extract_requested_targets(request, scene_graph)
+    if explicit:
+        return []
+
+    vague_reference = re.search(
+        r"\b(?:(?:the|an|a|any|some|appropriate|suitable|relevant)\s+)?"
+        r"(?:inspection\s+)?(?:area|areas|location|locations|place|places)\b",
+        text,
+    )
+    if not vague_reference:
+        return []
+
+    locations = scene_graph.get("locations", [])
+    if "inspection" in text or "area" in text:
+        candidates = [
+            item["id"] for item in locations
+            if isinstance(item, dict)
+            and isinstance(item.get("id"), str)
+            and item.get("type") == "inspection_area"
+        ]
+    else:
+        candidates = [
+            item["id"] for item in locations
+            if isinstance(item, dict)
+            and isinstance(item.get("id"), str)
+        ]
+
+    return candidates if len(candidates) > 1 else []
 
 
 def _normalise_and_ground(raw_plan, scene_graph, unavailable_robots=None):
@@ -90,6 +136,19 @@ def plan_mission_with_llm(
     request, scene_graph, unavailable_robots=None, timeout=60
 ):
     """Generate, ground, and validate a plan using local Ollama."""
+    ambiguous_candidates = _detect_ambiguous_request(request, scene_graph)
+    if ambiguous_candidates:
+        return {"tasks": []}, {
+            "source": "ambiguity_guard",
+            "model": MODEL_NAME,
+            "valid": False,
+            "requires_clarification": True,
+            "ambiguity_candidates": ambiguous_candidates,
+            "errors": [
+                "Ambiguous location reference; please specify one of: "
+                + ", ".join(ambiguous_candidates)
+            ],
+        }
     prompt = f"""
 You convert a robot mission into a JSON task plan.
 Return JSON only, with this exact structure:

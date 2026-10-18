@@ -118,28 +118,45 @@ def test_llm_grounding_rejects_invented_target(scene):
     assert errors
 
 
-def test_llm_empty_ambiguous_response_is_rejected(scene, monkeypatch):
-    class FakeResponse:
-        def raise_for_status(self):
-            pass
-
-        def json(self):
-            return {"response": '{"tasks": []}'}
-
-    def fake_post(url, json, timeout):
-        assert json["model"] == "qwen2.5:1.5b"
-        assert "If the request is ambiguous" in json["prompt"]
-        return FakeResponse()
+def test_ambiguous_location_requires_clarification(scene, monkeypatch):
+    def unexpected_model_call(*args, **kwargs):
+        raise AssertionError("Ambiguous request must be intercepted before Ollama")
 
     monkeypatch.setattr(
-        "multi_robot_sim.llm_semantic_planner.requests.post", fake_post
+        "multi_robot_sim.llm_semantic_planner.requests.post",
+        unexpected_model_call,
     )
     plan, result = plan_mission_with_llm(
-        "Inspect the appropriate area", scene
+        "Inspect the appropriate area using robot r0.", scene
     )
-    assert plan["tasks"] == []
-    assert result["source"] == "ollama"
-    assert not result["valid"]
+
+    assert plan == {"tasks": []}
+    assert result["source"] == "ambiguity_guard"
+    assert result["valid"] is False
+    assert result["requires_clarification"] is True
+    assert set(result["ambiguity_candidates"]) == {
+        "inspection_east",
+        "inspection_north",
+        "inspection_west",
+        "inspection_south",
+    }
+    assert any("Ambiguous location" in error for error in result["errors"])
+
+
+def test_unique_location_does_not_trigger_ambiguity_guard(scene):
+    from multi_robot_sim.llm_semantic_planner import _detect_ambiguous_request
+
+    assert _detect_ambiguous_request(
+        "Inspect the east inspection area using robot r0.", scene
+    ) == []
+
+
+def test_unknown_target_is_not_mislabeled_as_ambiguous(scene):
+    from multi_robot_sim.llm_semantic_planner import _detect_ambiguous_request
+
+    assert _detect_ambiguous_request(
+        "Inspect the green rooftop.", scene
+    ) == []
 
 
 def test_robot_unavailable_event_replans(scene):

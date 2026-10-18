@@ -84,9 +84,22 @@ The `semantic_events.py` demonstration applies two scripted events: `robot_unava
 
 This event handler updates planning state and validates the new plan; it is not connected to live Gazebo motion execution. The current system does not demonstrate the LLM regenerating a plan after every event, or enforce sensor-capability, task-dependency, and physical-safety constraints at the semantic-planning layer.
 
+### Deterministic ambiguity handling
+
+Before invoking the language model, the planner checks for vague references to
+inspection areas or locations when no configured target is explicitly named.
+For a request such as "Inspect the appropriate area", it returns no executable
+tasks, sets `requires_clarification` to true, and reports the candidate
+inspection locations. Requests that explicitly name a configured location
+continue through the normal planning path; unknown-target requests remain
+subject to grounding and validation. Regression tests cover these three cases.
+This guard addresses common vague location references, not arbitrary natural
+language ambiguity, and does not establish reliable ambiguity resolution by
+the language model itself.
+
 ### Verification results and limitations
 
-The latest ROS 2 package test run collected 58 tests: 57 passed, 1 was skipped, and none failed. Two lint-tool deprecation warnings did not fail the run. As a concrete negative verification case, a plan targeting `unknown_place` was rejected (`valid = false`) with the error `tasks[0]: unknown target 'unknown_place'.` The hierarchy tests also reject a dangling location reference. These tests verify configured software behaviour; they do not establish automatic scene perception, reliable ambiguity resolution, or live-robot execution of semantic event replanning.
+The latest ROS 2 package test run collected 60 tests: 59 passed, 1 was skipped, and none failed. Two lint-tool deprecation warnings did not fail the run. As a concrete negative verification case, a plan targeting `unknown_place` was rejected (`valid = false`) with the error `tasks[0]: unknown target 'unknown_place'.` The hierarchy tests also reject a dangling location reference. These tests verify configured software behaviour; they do not establish automatic scene perception, reliable ambiguity resolution, or live-robot execution of semantic event replanning.
 
 ## 2.3 Long-Term Deployment Challenges
 
@@ -228,7 +241,7 @@ colcon test --packages-select multi_robot_sim
 colcon test-result --verbose
 ```
 
-The latest observed test summary was 58 tests collected, 57 passed, 1 skipped, and zero failures. Sensor publication rates and mapping coverage were measured in short simulation sessions and should not be interpreted as long-duration performance benchmarks. The waypoint mission, software-level robot-failure recovery, semantic planning, and event handling were tested as described in their respective sections; the semantic pipeline is not connected to physical robot execution.
+The latest observed test summary was 60 tests collected, 59 passed, 1 skipped, and zero failures. Sensor publication rates and mapping coverage were measured in short simulation sessions and should not be interpreted as long-duration performance benchmarks. The waypoint mission, software-level robot-failure recovery, semantic planning, and event handling were tested as described in their respective sections; the semantic pipeline is not connected to physical robot execution.
 
 ## 4. Conclusion
 
