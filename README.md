@@ -25,7 +25,7 @@ The project is being developed incrementally, with an emphasis on reproducible e
 | Custom A* static-world planner | Implemented and tested; uses Gazebo SDF geometry, not the SLAM map |
 | Nav2 global planning | Not configured or validated |
 | Ten-waypoint mission | All 10 waypoints reached in the A*-enabled Gazebo run |
-| Semantic planning baseline and event-driven replanning | Implemented; 53 tests collected: 52 passed, 1 skipped, 0 failed |
+| Semantic planning baseline and event-driven replanning | Implemented; 58 tests collected: 57 passed, 1 skipped, 0 failed |
 
 Statuses reflect work completed and tested so far; pending components are not represented as implemented.
 
@@ -53,7 +53,8 @@ ltu-robotics-ai-phd-assignment/
 │   └── time_log.md
 ├── report/
 │   ├── report.md
-│   └── references.bib
+│   ├── references.bib
+│   └── assignment_report.pdf
 └── ros2_ws/
     └── src/
         └── multi_robot_sim/
@@ -225,7 +226,7 @@ ros2 run multi_robot_sim semantic_events
 colcon test --packages-select multi_robot_sim --event-handlers console_direct+
 ```
 
-The latest regression run collected 53 tests: 52 passed, 1 skipped, 0 failed. Python lint tooling emitted deprecation warnings that did not fail the tests.
+The latest regression run collected 58 tests: 57 passed, 1 skipped, 0 failed. Python lint tooling emitted deprecation warnings that did not fail the tests.
 The model-backed planner has been tested on a representative unambiguous mission. Broader evaluation of ambiguous requests, model failure, grounding accuracy, and performance against the deterministic baseline remains pending.
 
 ## Current Limitations
