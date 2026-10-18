@@ -387,19 +387,46 @@ class MissionExecutor(Node):
                 state, 'TIMEOUT', 'Goal exceeded configured time limit.')
             return
 
+        if not state.path:
+            self.finish_waypoint(
+                state, 'NO_PATH',
+                'No A* path is available.')
+            return
+
+        path_x, path_y = state.path[state.path_index]
+        dx = path_x - state.x
+        dy = path_y - state.y
+        desired_yaw = math.atan2(dy, dx)
+        yaw_error = normalize_angle(desired_yaw - state.yaw)
+        wants_forward_motion = abs(yaw_error) < 0.45
+
         if state.blocked_started is not None:
             clearance = state.front_clearance
-            if clearance is None or clearance < self.resume_distance:
+
+            if not wants_forward_motion:
+                self.publish_status(
+                    'OBSTACLE_TURN_RECOVERY', state.robot_id,
+                    waypoint_id,
+                    'Turning to align with the next path segment.')
+                state.blocked_started = None
+
+            elif clearance is None or clearance < self.resume_distance:
                 self.stop_robot(state)
+
                 if now - state.blocked_started >= self.blocked_timeout:
                     self.finish_waypoint(
-                        state, 'BLOCKED', 'Obstacle remained in front.')
+                        state, 'BLOCKED',
+                        'Obstacle remained in front.')
                 return
-            self.publish_status(
-                'OBSTACLE_CLEARED', state.robot_id, waypoint_id,
-                f'front clearance={clearance:.2f} m')
-            state.blocked_started = None
-        elif (state.front_clearance is not None
+
+            else:
+                self.publish_status(
+                    'OBSTACLE_CLEARED', state.robot_id, waypoint_id,
+                    f'front clearance={clearance:.2f} m')
+                state.blocked_started = None
+
+        elif (wants_forward_motion
+              and state.front_clearance is not None
               and state.front_clearance < self.stop_distance):
             self.stop_robot(state)
             state.blocked_started = now
