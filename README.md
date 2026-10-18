@@ -19,11 +19,11 @@ The project is being developed incrementally, with an emphasis on reproducible e
 | Static robot-link TF | Verified for all three robots |
 | LiDAR topic publication | Verified for all three robots |
 | RGB-D camera topics | Verified for all three robots |
-| Camera frame IDs | Checked for `r0` RGB and depth images |
+| RGB-D live messages and frame IDs | Verified for RGB and depth on `r0`, `r1`, and `r2` |
 | Base-to-camera static TF | Verified for all three robots |
-| SLAM / mapping | Executed; map saved |
+| SLAM / mapping | SLAM Toolbox configured for `r0`; partial map saved; reproduction workflow documented |
 | Custom A* static-world planner | Implemented and tested; uses Gazebo SDF geometry, not the SLAM map |
-| Nav2 global planning | Not configured or validated |
+| Nav2 global planning | Not configured or validated; custom A* planner used instead |
 | Ten-waypoint mission | All 10 waypoints reached in the A*-enabled Gazebo run |
 | Semantic planning baseline and event-driven replanning | Implemented; 58 tests collected: 57 passed, 1 skipped, 0 failed |
 
@@ -39,7 +39,7 @@ Statuses reflect work completed and tested so far; pending components are not re
 - Xacro and URDF
 - `tf2_ros`
 - Gazebo ROS camera plugin
-- Nav2 and `slam_toolbox` installed for planned development
+- `slam_toolbox` used for robot-specific 2D mapping; Nav2 packages may be installed, but Nav2 global planning is not configured or validated
 - Python and Git
 
 ## Repository Structure

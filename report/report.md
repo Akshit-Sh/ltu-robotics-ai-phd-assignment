@@ -42,7 +42,7 @@ SLAM Toolbox was run during the mission, producing `maps/inspection_map.pgm` and
 
 ### Limitations
 
-The experiments verify a bounded simulation workflow, not a complete autonomous navigation stack. A custom A* global path planner was implemented and tested against static geometry from the SDF world; Nav2 was not configured or validated. The planner does not plan from the saved SLAM map, and the safety guard is not a guarantee of collision-free motion. Sensor-rate observations were short, and mapping accuracy remains unmeasured.
+The experiments verify a bounded simulation workflow, not a complete autonomous navigation stack. SLAM Toolbox creates a robot-specific 2D occupancy map from r0's LiDAR and odometry; multi-robot map merging was not implemented, and map accuracy was not evaluated against ground truth. The custom A* planner instead rasterises static box collision geometry from the Gazebo SDF world and does not use the saved SLAM map. Nav2 global planning was not configured or validated. The forward LiDAR guard provides stop/resume behaviour when an obstacle is detected ahead, but does not guarantee collision-free motion or demonstrate dynamic global replanning. Sensor-rate observations were short.
 
 ## 2.2 Language-Grounded Semantic Planning and Event Handling
 
