@@ -76,6 +76,15 @@ Mission: {natural-language mission request}
 
 The Ollama request uses JSON output mode, non-streaming generation, and temperature 0. No fine-tuning is used.
 
+The inspected environment reported Ollama version `0.40.5`. The installed
+`qwen2.5:1.5b` model reported Qwen 2 architecture, 1.5 billion parameters,
+Q4_K_M quantization, a 32,768-token context length, and a 1,536-dimensional
+embedding length. The installed model listing showed the shortened identifier
+`65ec06548149` and a size of 986 MB. These are observations of the inspected
+environment; they do not independently establish the exact Ollama version or
+model artifact used in every historical experiment.
+
+
 The validation layer checks plan structure, non-empty task lists, task objects, unique task IDs, supported actions, known targets, known robots, and robot availability. It also validates the configured hierarchy when present. Unexpected field types are rejected instead of causing set-membership type errors. Regression tests cover invalid plans, alias grounding, invented targets, unavailable robots, and an empty model response for an ambiguity-oriented request. The mocked response verifies response handling; it does not establish that the model reliably resolves every kind of ambiguity. When Ollama returns the prompt's empty-task abstention response, the full planner marks it invalid and does not invoke the deterministic fallback; a regression test covers this path. The deterministic fallback is used for request or response-parsing exceptions and is separately validated.
 
 ### Event-driven replanning
@@ -99,7 +108,7 @@ the language model itself.
 
 ### Verification results and limitations
 
-The latest ROS 2 package test run collected 60 tests: 59 passed, 1 was skipped, and none failed. Two lint-tool deprecation warnings did not fail the run. As a concrete negative verification case, a plan targeting `unknown_place` was rejected (`valid = false`) with the error `tasks[0]: unknown target 'unknown_place'.` The hierarchy tests also reject a dangling location reference. These tests verify configured software behaviour; they do not establish automatic scene perception, reliable ambiguity resolution, or live-robot execution of semantic event replanning.
+The latest ROS 2 package test run collected 61 tests: 60 passed, 1 was skipped, and none failed. Two lint-tool deprecation warnings did not fail the run. As a concrete negative verification case, a plan targeting `unknown_place` was rejected (`valid = false`) with the error `tasks[0]: unknown target 'unknown_place'.` The hierarchy tests also reject a dangling location reference. These tests verify configured software behaviour; they do not establish automatic scene perception, reliable ambiguity resolution, or live-robot execution of semantic event replanning.
 
 ## 2.3 Long-Term Deployment Challenges
 
@@ -241,7 +250,7 @@ colcon test --packages-select multi_robot_sim
 colcon test-result --verbose
 ```
 
-The latest observed test summary was 60 tests collected, 59 passed, 1 skipped, and zero failures. Sensor publication rates and mapping coverage were measured in short simulation sessions and should not be interpreted as long-duration performance benchmarks. The waypoint mission, software-level robot-failure recovery, semantic planning, and event handling were tested as described in their respective sections; the semantic pipeline is not connected to physical robot execution.
+The latest observed test summary was 61 tests collected, 60 passed, 1 skipped, and zero failures. Sensor publication rates and mapping coverage were measured in short simulation sessions and should not be interpreted as long-duration performance benchmarks. The waypoint mission, software-level robot-failure recovery, semantic planning, and event handling were tested as described in their respective sections; the semantic pipeline is not connected to physical robot execution.
 
 ## 4. Conclusion
 

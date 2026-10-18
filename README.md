@@ -1,4 +1,3 @@
-
 # Multi-Robot Robotics and AI Assignment
 
 **LTU Robotics and AI PhD Assignment — Luleå University of Technology**
@@ -9,23 +8,23 @@ The project is being developed incrementally, with an emphasis on reproducible e
 
 ## Project Status
 
-| Component | Status |
-|---|---|
-| ROS 2 Humble workspace | Set up |
-| Gazebo Classic simulation | Three robots spawned |
-| Robot namespaces (`r0`, `r1`, `r2`) | Verified |
-| Independent command-topic isolation | Tested by commanding `r0` |
-| Dynamic odometry TF | Verified for all three robots |
-| Static robot-link TF | Verified for all three robots |
-| LiDAR topic publication | Verified for all three robots |
-| RGB-D camera topics | Verified for all three robots |
-| RGB-D live messages and frame IDs | Verified for RGB and depth on `r0`, `r1`, and `r2` |
-| Base-to-camera static TF | Verified for all three robots |
-| SLAM / mapping | SLAM Toolbox configured for `r0`; partial map saved; reproduction workflow documented |
-| Custom A* static-world planner | Implemented and tested; uses Gazebo SDF geometry, not the SLAM map |
-| Nav2 global planning | Not configured or validated; custom A* planner used instead |
-| Ten-waypoint mission | All 10 waypoints reached in the A*-enabled Gazebo run |
-| Semantic planning baseline and event-driven replanning | Implemented; 58 tests collected: 57 passed, 1 skipped, 0 failed |
+| **Component**                                          | **Status**                                                                            |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| ROS 2 Humble workspace                                 | Set up                                                                                |
+| Gazebo Classic simulation                              | Three robots spawned                                                                  |
+| Robot namespaces (`r0`, `r1`, `r2`)                    | Verified                                                                              |
+| Independent command-topic isolation                    | Tested by commanding `r0`                                                             |
+| Dynamic odometry TF                                    | Verified for all three robots                                                         |
+| Static robot-link TF                                   | Verified for all three robots                                                         |
+| LiDAR topic publication                                | Verified for all three robots                                                         |
+| RGB-D camera topics                                    | Verified for all three robots                                                         |
+| RGB-D live messages and frame IDs                      | Verified for RGB and depth on `r0`, `r1`, and `r2`                                    |
+| Base-to-camera static TF                               | Verified for all three robots                                                         |
+| SLAM / mapping                                         | SLAM Toolbox configured for `r0`; partial map saved; reproduction workflow documented |
+| Custom A\* static-world planner                        | Implemented and tested; uses Gazebo SDF geometry, not the SLAM map                    |
+| Nav2 global planning                                   | Not configured or validated; custom A\* planner used instead                          |
+| Ten-waypoint mission                                   | All 10 waypoints reached in the A\*-enabled Gazebo run                                |
+| Semantic planning baseline and event-driven replanning | Implemented; 61 tests collected: 60 passed, 1 skipped, 0 failed                       |
 
 Statuses reflect work completed and tested so far; pending components are not represented as implemented.
 
@@ -44,7 +43,7 @@ Statuses reflect work completed and tested so far; pending components are not re
 
 ## Repository Structure
 
-```text
+```
 ltu-robotics-ai-phd-assignment/
 ├── README.md
 ├── .gitignore
@@ -68,6 +67,7 @@ ltu-robotics-ai-phd-assignment/
             ├── resource/
             ├── setup.cfg
             └── setup.py
+
 ```
 
 ## Prerequisites
@@ -89,7 +89,7 @@ Install or verify the required packages in an appropriately configured ROS 2 Hum
 
 Open a terminal and run:
 
-```bash
+```
 source /opt/ros/humble/setup.bash
 
 cd ~/ltu_rai_assignment/ros2_ws
@@ -102,7 +102,7 @@ source install/setup.bash
 
 Run the following in the terminal where you want to launch Gazebo:
 
-```bash
+```
 source /opt/ros/humble/setup.bash
 source ~/ltu_rai_assignment/ros2_ws/install/setup.bash
 
@@ -116,33 +116,33 @@ The software-rendering setting is useful for the WSL2 environment used during de
 
 The current launch file starts one Gazebo server and GUI and spawns three robots at the following initial positions:
 
-| Robot | Initial x | Initial y |
-|---|---:|---:|
-| `r0` | 0.0 m | 0.0 m |
-| `r1` | 2.0 m | 0.0 m |
-| `r2` | 0.0 m | 2.0 m |
+| **Robot** | **Initial x** | **Initial y** |
+| --------- | ------------- | ------------- |
+| `r0`      | 0.0 m         | 0.0 m         |
+| `r1`      | 2.0 m         | 0.0 m         |
+| `r2`      | 0.0 m         | 2.0 m         |
 
 ## Task 2.1 — Mission reproduction
 
 Launch Gazebo using the command above. In a second sourced terminal run `ros2 run multi_robot_sim mission_executor`. Monitor `/mission/status` and wait for `MISSION_COMPLETE`; keep this successful run free of injected failures.
 
-For a separate recovery run, publish `r0` to `/mission/failed_robot` as `std_msgs/msg/String` using `ros2 topic pub --once /mission/failed_robot std_msgs/msg/String "{data: r0}"`. The number of unfinished goals transferred depends on injection timing; the recorded run transferred four. This is a software-level failure simulation, not physical hardware failure.
+For a separate recovery run, start a fresh experiment and publish `r0` to `/mission/failed_robot` as `std_msgs/msg/String` using `ros2 topic pub --once /mission/failed_robot std_msgs/msg/String "{data: r0}"`. The number of unfinished goals transferred depends on injection timing; the recorded run transferred four. Inspect the recovery log for failure detection and reassignment. This run does not establish successful completion of the entire mission after failure injection. This is a software-level failure simulation, not physical hardware failure.
 
 ## Namespaces and Topics
 
 Each robot has its own namespaced command, sensor, and odometry topics.
 
-| Purpose | `r0` | `r1` | `r2` |
-|---|---|---|---|
-| Velocity command | `/r0/cmd_vel` | `/r1/cmd_vel` | `/r2/cmd_vel` |
-| LiDAR scan | `/r0/scan` | `/r1/scan` | `/r2/scan` |
-| IMU | `/r0/imu` | `/r1/imu` | `/r2/imu` |
-| Odometry | `/r0/odom` | `/r1/odom` | `/r2/odom` |
-| RGB image | `/r0/camera/color/image_raw` | `/r1/camera/color/image_raw` | `/r2/camera/color/image_raw` |
-| Depth image | `/r0/camera/depth/image_raw` | `/r1/camera/depth/image_raw` | `/r2/camera/depth/image_raw` |
-| RGB camera info | `/r0/camera/color/camera_info` | `/r1/camera/color/camera_info` | `/r2/camera/color/camera_info` |
+| **Purpose**       | **`r0`**                       | **`r1`**                       | **`r2`**                       |
+| ----------------- | ------------------------------ | ------------------------------ | ------------------------------ |
+| Velocity command  | `/r0/cmd_vel`                  | `/r1/cmd_vel`                  | `/r2/cmd_vel`                  |
+| LiDAR scan        | `/r0/scan`                     | `/r1/scan`                     | `/r2/scan`                     |
+| IMU               | `/r0/imu`                      | `/r1/imu`                      | `/r2/imu`                      |
+| Odometry          | `/r0/odom`                     | `/r1/odom`                     | `/r2/odom`                     |
+| RGB image         | `/r0/camera/color/image_raw`   | `/r1/camera/color/image_raw`   | `/r2/camera/color/image_raw`   |
+| Depth image       | `/r0/camera/depth/image_raw`   | `/r1/camera/depth/image_raw`   | `/r2/camera/depth/image_raw`   |
+| RGB camera info   | `/r0/camera/color/camera_info` | `/r1/camera/color/camera_info` | `/r2/camera/color/camera_info` |
 | Depth camera info | `/r0/camera/depth/camera_info` | `/r1/camera/depth/camera_info` | `/r2/camera/depth/camera_info` |
-| Depth point cloud | `/r0/camera/depth/points` | `/r1/camera/depth/points` | `/r2/camera/depth/points` |
+| Depth point cloud | `/r0/camera/depth/points`      | `/r1/camera/depth/points`      | `/r2/camera/depth/points`      |
 
 The robots publish transforms on the shared `/tf` and `/tf_static` topics. Frame IDs use robot-specific prefixes, such as `r0/base_link`, `r1/base_link`, and `r2/base_link`.
 
@@ -150,14 +150,14 @@ The robots publish transforms on the shared `/tf` and `/tf_static` topics. Frame
 
 Each robot model contains a simulated RGB-D camera configured with:
 
-| Parameter | Value |
-|---|---|
-| Image resolution | 320 × 240 pixels |
-| Configured update rate | 10 Hz |
-| Horizontal field of view | 1.047 rad |
-| Near clipping distance | 0.10 m |
-| Far clipping distance | 8.0 m |
-| Camera frame | `rX/camera_link` |
+| **Parameter**            | **Value**        |
+| ------------------------ | ---------------- |
+| Image resolution         | 320 × 240 pixels |
+| Configured update rate   | 10 Hz            |
+| Horizontal field of view | 1.047 rad        |
+| Near clipping distance   | 0.10 m           |
+| Far clipping distance    | 8.0 m            |
+| Camera frame             | `rX/camera_link` |
 
 The RGB and depth image headers checked for `r0` reported `r0/camera_link`. Static transforms from each robot's `base_link` to `camera_link` were added to the launch file. Transform lookups from `odom` to `camera_link` returned valid results for all three robots.
 
@@ -173,7 +173,7 @@ The following checks have been completed in the development environment:
 4. Verified `odom -> base_footprint` transforms for all three robots.
 5. Verified static robot-link transforms, including the base, IMU, LiDAR, and caster links, for all three robots.
 6. Discovered RGB image, depth image, camera-info, and depth point-cloud topics for all three robots.
-7. Checked RGB and depth image frame IDs for `r0`.
+7. Checked RGB and depth image frame IDs for the robots covered by the live-message checks; the earlier preliminary rate check did not obtain a stable RGB measurement for `r2`.
 8. Verified `base_link -> camera_link` and `odom -> camera_link` transform lookups for all three robots.
 9. Measured LiDAR and camera publication rates using short ROS CLI checks.
 
@@ -181,14 +181,14 @@ The following checks have been completed in the development environment:
 
 The LiDAR and cameras are configured for 10 Hz. The LiDAR measurements in the table below are earlier preliminary results from before the LiDAR update; a later run measured approximately 8.7 Hz. Actual rates vary with Gazebo/WSL simulation load.
 
-| Sensor stream | Preliminary observed rate |
-|---|---:|
-| `/r0/scan` | Approximately 3.2–4.0 Hz across sessions |
-| `/r1/scan` | Approximately 3.2–4.0 Hz across sessions |
-| `/r2/scan` | Approximately 3.4–3.6 Hz across sessions |
-| `r0` RGB | Approximately 6.7 Hz |
-| `r1` RGB | Approximately 7.0 Hz |
-| `r2` RGB | Stable RGB measurement not obtained |
+| **Sensor stream**   | **Preliminary observed rate**                    |
+| ------------------- | ------------------------------------------------ |
+| `/r0/scan`          | Approximately 3.2–4.0 Hz across sessions         |
+| `/r1/scan`          | Approximately 3.2–4.0 Hz across sessions         |
+| `/r2/scan`          | Approximately 3.4–3.6 Hz across sessions         |
+| `r0` RGB            | Approximately 6.7 Hz                             |
+| `r1` RGB            | Approximately 7.0 Hz                             |
+| `r2` RGB            | Stable RGB measurement not obtained              |
 | RGB-D depth streams | Approximately 6.5–7.2 Hz across available checks |
 
 These values are preliminary observations, not guaranteed performance figures. Measurements used short-lived ROS CLI processes, and some checks showed startup or ROS context shutdown warnings. Longer-duration measurements under controlled conditions are needed for reliable benchmarking.
@@ -219,15 +219,14 @@ These values are preliminary observations, not guaranteed performance figures. M
 
 After building and sourcing the workspace, reproduce the demonstrations:
 
-```bash
+```
 ros2 run multi_robot_sim semantic_planner
 ros2 run multi_robot_sim llm_semantic_planner
 ros2 run multi_robot_sim semantic_events
 colcon test --packages-select multi_robot_sim --event-handlers console_direct+
 ```
 
-The latest regression run collected 58 tests: 57 passed, 1 skipped, 0 failed. Python lint tooling emitted deprecation warnings that did not fail the tests.
-The model-backed planner has been tested on a representative unambiguous mission. Broader evaluation of ambiguous requests, model failure, grounding accuracy, and performance against the deterministic baseline remains pending.
+The latest regression run collected 61 tests: 60 passed, 1 skipped, 0 failed. Python lint tooling emitted non-fatal deprecation warnings. The model-backed planner has been tested on a representative unambiguous mission, and a regression test verifies that an empty task list returned by the model is rejected without deterministic fallback. Broader evaluation of ambiguous requests, model failure, grounding accuracy, and performance against the deterministic baseline remains pending.
 
 ## Current Limitations
 
@@ -248,18 +247,21 @@ The next stages are:
 1. Investigate simulation timing and sensor publication rates.
 2. Improve mapping coverage and evaluate the saved map against ground truth.
 3. Configure and test Nav2 independently for each robot.
-4. Keep the verified A*-enabled waypoint mission and obstacle-detour regression test reproducible.
-5. Extend failure-recovery testing to additional failure scenarios.
-6. Extend the implemented semantic planning baseline, scene-graph grounding, plan validation, and scripted event replanning; evaluate broader language coverage and model failure cases.
-7. Document long-term inspection autonomy challenges, the research problem, and the literature review.
-8. Complete reproducibility instructions, test evidence, and the final assignment report.
+4. Preserve reproducibility of the verified A\*-enabled waypoint mission and obstacle-detour regression test.
+5. Extend failure-recovery testing to additional failure scenarios and assess mission completion after reassignment.
+6. Evaluate broader language coverage, grounding accuracy, model failures, and performance against the deterministic semantic-planning baseline.
+7. Improve documentation of long-term inspection autonomy challenges, the research problem, and the literature review.
+8. Maintain reproducibility instructions, test evidence, and the final assignment report.
 
 ## Documentation
 
-- [`docs/design_decisions.md`](docs/design_decisions.md) — design decisions and rationale.
-- [`docs/time_log.md`](docs/time_log.md) — development milestones and test observations.
-- [`report/report.md`](report/report.md) — report draft.
-- [`report/references.bib`](report/references.bib) — bibliography.
+- [`docs/design_decisions.md`](https://github.com/Akshit-Sh/ltu-robotics-ai-phd-assignment/blob/main/docs/design_decisions.md) — design decisions and rationale.
+- [`docs/time_log.md`](https://github.com/Akshit-Sh/ltu-robotics-ai-phd-assignment/blob/main/docs/time_log.md) — development milestones and test observations.
+- [`report/report.md`](https://github.com/Akshit-Sh/ltu-robotics-ai-phd-assignment/blob/main/report/report.md) — report draft.
+- [`report/references.bib`](https://github.com/Akshit-Sh/ltu-robotics-ai-phd-assignment/blob/main/report/references.bib) — bibliography.
+- [`report/assignment_report.pdf`](https://github.com/Akshit-Sh/ltu-robotics-ai-phd-assignment/blob/main/report/assignment_report.pdf) — compiled assignment report.
+- [`mission_run.log`](https://github.com/Akshit-Sh/ltu-robotics-ai-phd-assignment/blob/main/docs/evidence/task_2_1/mission/mission_run.log) — nominal ten-waypoint mission evidence.
+- [`failure_recovery.log`](https://github.com/Akshit-Sh/ltu-robotics-ai-phd-assignment/blob/main/docs/evidence/task_2_1/mission/failure_recovery.log) — failure detection and reassignment evidence; not proof of full mission completion after failure injection.
 
 ## Reproducibility and Reporting
 

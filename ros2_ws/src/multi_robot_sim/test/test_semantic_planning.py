@@ -159,7 +159,6 @@ def test_unknown_target_is_not_mislabeled_as_ambiguous(scene):
     ) == []
 
 
-
 def test_llm_abstention_response_is_rejected_without_fallback(
     scene, monkeypatch
 ):
