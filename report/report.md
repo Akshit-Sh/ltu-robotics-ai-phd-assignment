@@ -86,7 +86,7 @@ This event handler updates planning state and validates the new plan; it is not 
 
 ### Verification results and limitations
 
-The latest ROS 2 package test run collected 53 tests: 52 passed, 1 was skipped, and none failed. Two lint-tool deprecation warnings did not fail the run. As a concrete negative verification case, a plan targeting `unknown_place` was rejected (`valid = false`) with the error `tasks[0]: unknown target 'unknown_place'.` The hierarchy tests also reject a dangling location reference. These tests verify configured software behaviour; they do not establish automatic scene perception, reliable ambiguity resolution, or live-robot execution of semantic event replanning.
+The latest ROS 2 package test run collected 58 tests: 57 passed, 1 was skipped, and none failed. Two lint-tool deprecation warnings did not fail the run. As a concrete negative verification case, a plan targeting `unknown_place` was rejected (`valid = false`) with the error `tasks[0]: unknown target 'unknown_place'.` The hierarchy tests also reject a dangling location reference. These tests verify configured software behaviour; they do not establish automatic scene perception, reliable ambiguity resolution, or live-robot execution of semantic event replanning.
 
 ## 2.3 Long-Term Deployment Challenges
 
@@ -172,6 +172,26 @@ The expected contribution is a testable framework for connecting semantic ground
 
 This is a proposed research direction, not a result established by the current implementation. The existing project demonstrates configured-scene grounding, plan validation, and scripted availability events, but does not yet implement long-term map freshness estimation or evaluate this complete architecture. Those elements would require further implementation and controlled experiments before the hypothesis could be accepted or rejected.
 
+## Estimated Time Spent
+
+Time spent was not tracked contemporaneously. The following figures are
+retrospective estimates based on the implementation, debugging, and
+verification work performed.
+
+| Task | Approximate time |
+|---|---:|
+| Task 2.1 — Multi-robot simulation, sensing, and mapping | 14 hours |
+| Task 2.2 — Semantic planning and event handling | 7 hours |
+
+## AI Assistance and Author Verification
+
+I used ChatGPT to support technical troubleshooting, review test and
+evidence outputs, and assist with report organization and editing. I ran
+the reported commands and reviewed the resulting outputs. The reported
+experimental results are based on observed execution. AI assistance does
+not replace experimental evidence or imply capabilities that were not
+demonstrated.
+
 ## 3. Reproducibility
 
 The experiments were developed on Ubuntu 22.04 under WSL2 with ROS 2 Humble and Gazebo Classic. The semantic demonstrations use the configured scene graph in `ros2_ws/src/multi_robot_sim/config/semantic/scene_graph.json`. The model-backed planner additionally requires a working local Ollama installation with `qwen2.5:1.5b` available.
@@ -208,7 +228,7 @@ colcon test --packages-select multi_robot_sim
 colcon test-result --verbose
 ```
 
-The latest observed test summary was 53 tests collected, 52 passed, 1 skipped, and zero failures. Sensor publication rates and mapping coverage were measured in short simulation sessions and should not be interpreted as long-duration performance benchmarks. The waypoint mission, software-level robot-failure recovery, semantic planning, and event handling were tested as described in their respective sections; the semantic pipeline is not connected to physical robot execution.
+The latest observed test summary was 58 tests collected, 57 passed, 1 skipped, and zero failures. Sensor publication rates and mapping coverage were measured in short simulation sessions and should not be interpreted as long-duration performance benchmarks. The waypoint mission, software-level robot-failure recovery, semantic planning, and event handling were tested as described in their respective sections; the semantic pipeline is not connected to physical robot execution.
 
 ## 4. Conclusion
 
