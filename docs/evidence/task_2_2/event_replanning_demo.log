@@ -1,0 +1,107 @@
+[
+  {
+    "event": {
+      "type": "robot_unavailable",
+      "value": "r0"
+    },
+    "plan": {
+      "tasks": [
+        {
+          "task_id": "semantic_001",
+          "action": "inspect",
+          "target": "inspection_east",
+          "robot": "r1"
+        },
+        {
+          "task_id": "semantic_002",
+          "action": "inspect",
+          "target": "inspection_north",
+          "robot": "r2"
+        }
+      ]
+    },
+    "errors": [],
+    "state": {
+      "unavailable_robots": [
+        "r0"
+      ],
+      "unavailable_targets": [],
+      "blocked_targets": [],
+      "event_log": [
+        {
+          "type": "robot_unavailable",
+          "value": "r0",
+          "result": "robot marked unavailable"
+        }
+      ],
+      "last_plan": {
+        "tasks": [
+          {
+            "task_id": "semantic_001",
+            "action": "inspect",
+            "target": "inspection_east",
+            "robot": "r1"
+          },
+          {
+            "task_id": "semantic_002",
+            "action": "inspect",
+            "target": "inspection_north",
+            "robot": "r2"
+          }
+        ]
+      },
+      "last_valid": true
+    }
+  },
+  {
+    "event": {
+      "type": "target_unavailable",
+      "value": "inspection_east"
+    },
+    "plan": {
+      "tasks": [
+        {
+          "task_id": "semantic_001",
+          "action": "inspect",
+          "target": "inspection_north",
+          "robot": "r1"
+        }
+      ]
+    },
+    "errors": [],
+    "state": {
+      "unavailable_robots": [
+        "r0"
+      ],
+      "unavailable_targets": [
+        "inspection_east"
+      ],
+      "blocked_targets": [
+        "inspection_east"
+      ],
+      "event_log": [
+        {
+          "type": "robot_unavailable",
+          "value": "r0",
+          "result": "robot marked unavailable"
+        },
+        {
+          "type": "target_unavailable",
+          "value": "inspection_east",
+          "result": "target marked unavailable"
+        }
+      ],
+      "last_plan": {
+        "tasks": [
+          {
+            "task_id": "semantic_001",
+            "action": "inspect",
+            "target": "inspection_north",
+            "robot": "r1"
+          }
+        ]
+      },
+      "last_valid": true
+    }
+  }
+]

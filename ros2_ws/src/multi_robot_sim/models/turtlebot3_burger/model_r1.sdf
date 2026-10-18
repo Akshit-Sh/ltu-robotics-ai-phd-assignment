@@ -91,6 +91,7 @@
           </linear_acceleration>
         </imu>
         <plugin name="turtlebot3_imu" filename="libgazebo_ros_imu_sensor.so">
+          <frame_name>r1/imu_link</frame_name>
           <ros>
             <namespace>/r1</namespace>
             <remapping>~/out:=imu</remapping>

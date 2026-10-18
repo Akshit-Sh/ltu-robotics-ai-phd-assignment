@@ -10,7 +10,7 @@
 ## Execution observations
 - A* paths were followed to waypoint goals.
 - Obstacle-stop and obstacle-clearance events were observed.
-- Waypoint wp08 was initially blocked, requeued, and subsequently reached.
+- In the successful mission run, wp08 was reached on its first attempt. A separate failure-injection run demonstrated robot-failure detection and waypoint reassignment, but did not establish end-to-end mission completion.
 - The executor reported: "All ten unique waypoints reached."
 
 ## Automated tests
