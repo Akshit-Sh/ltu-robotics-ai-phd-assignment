@@ -35,8 +35,6 @@ The environment was developed on Ubuntu 22.04 under WSL2 with ROS 2 Humble and G
 
 Short measurements in the WSL2 environment recorded RGB publication rates of approximately 6.7 Hz for r0 and 7.0 Hz for r1. Available depth measurements were approximately 6.5–7.2 Hz. Earlier LiDAR checks measured approximately 3.2–4.0 Hz. A later short LiDAR check recorded approximately 8.7 Hz. These values are observations from particular sessions and are presented as measurements rather than guaranteed performance rates.
 
-*Figure 1. Recorded sensor publication rates compared with the configured 10 Hz target. Measurements depend on the simulation session and system load.*
-
 ### Waypoint Mission and A* Navigation
 
 A centralized waypoint executor ran ten unique waypoints, wp01–wp10, with a goal tolerance of 0.15 m. In the successful A\*-enabled Gazebo run, the executor emitted MISSION_COMPLETE, recorded all ten waypoint IDs as completed, and ended with empty unresolved and failed-robot lists. The logged final goal distances were approximately 0.048–0.050 m, within the configured tolerance.
@@ -57,7 +55,11 @@ The custom A\* planner parses known static collision-box geometry from the Gazeb
 | Failed robots at completion | 0 |
 | Mission status | `MISSION_COMPLETE` |
 
-The successful nominal run provides a repeatable baseline for further experiments on navigation, disturbance handling, and multi-robot inspection.\n\n![Nominal mission allocation and execution timeline](assets/mission_results.png)\n\n*Figure 3. Recorded nominal mission allocation and execution timeline. Dashed paths in the source figure are offline route reconstructions, not recorded trajectories.*
+The successful nominal run provides a repeatable baseline for further experiments on navigation, disturbance handling, and multi-robot inspection.
+
+![Nominal mission allocation and execution timeline](assets/mission_results.png)
+
+*Figure 1. Recorded nominal mission allocation and execution timeline. Dashed paths are offline route reconstructions from the SDF world, not recorded robot trajectories.*
 
 ### Robot-Availability Recovery Experiment
 
@@ -67,9 +69,22 @@ A separate software-level failure was injected for r0 through the mission failur
 
 SLAM Toolbox was run during the mission, producing maps/inspection_map.pgm and maps/inspection_map.yaml. The saved map contains 152 × 160 cells at 0.05 m resolution, corresponding to a 7.60 × 8.00 m extent. Recorded cell statistics were 60.1% free, 3.4% occupied, and 36.5% unknown, giving 63.5% known-cell coverage.
 
-![Gazebo inspection environment and SLAM occupancy map](assets/gazebo_and_map.png)
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="58%">
+        <img src="assets/gazebo_world.png" alt="Gazebo inspection environment with three robots and LiDAR rays" width="100%">
+        <br><em>(a) Gazebo inspection environment</em>
+      </td>
+      <td align="center" width="42%">
+        <img src="assets/inspection_map.png" alt="Partial SLAM Toolbox occupancy map" width="100%">
+        <br><em>(b) SLAM occupancy map</em>
+      </td>
+    </tr>
+  </table>
+</div>
 
-*Figure 2. Gazebo inspection environment and the SLAM Toolbox occupancy map reproduced from the supplied report. The map is a partial 2D map generated from r0 LiDAR and odometry.*
+*Figure 2. Gazebo Classic inspection environment and partial occupancy map generated from r0 LiDAR and odometry. The map contains 152 × 160 cells at 0.05 m resolution, with 63.5% known-cell coverage.*
 
 ### Limitations
 
@@ -95,9 +110,9 @@ world
     └── configured static obstacles
 ```
 
-![Configured semantic scene graph](assets/semantic_scene_graph.png)
+![Configured semantic scene hierarchy](../figures/semantic_hierarchy.png)
 
-*Figure 3. Configured semantic scene graph and entity attributes, reproduced from the supplied report.*
+*Figure 3. Configured semantic scene hierarchy. Entity IDs link the hierarchy to configured scene collections; it is not generated from live perception.*
 
 The function validate_scene_hierarchy() checks the root, groups, entity references, duplicate references, and coverage of configured entities. Tests verify a valid hierarchy and rejection of a dangling location reference.
 
@@ -212,13 +227,17 @@ The scene graph is not assumed to be perfectly accurate. Observations may be del
 
 ### Conceptual Approach
 
-The proposed architecture separates evidence tracking, language-model task proposals, deterministic validation, allocation, time-limited ownership, and execution monitoring.\n\n![Proposed evidence-aware semantic planning architecture](assets/proposed_architecture.png)\n\n*Figure 4. Proposed research framework reproduced from the supplied report; this is a conceptual design, not an implemented system.*\n\nThe proposed architecture has five stages:
+The proposed architecture separates evidence tracking, language-model task proposals, deterministic validation, allocation, time-limited ownership, and execution monitoring. This is a conceptual design for future research, not an implemented system.
+
+The proposed architecture has five stages:
 
 1. **Ground the mission.** Convert a natural-language request into structured tasks with explicit targets, required capabilities, dependencies, and completion conditions.
 2. **Validate against current state.** Check target availability, robot capabilities, task dependencies, and safety constraints.
 3. **Monitor execution.** Compare task outcomes with expected observations, track robot availability and sensor health, and timestamp map evidence. Mark discrepancies as uncertain rather than silently treating them as current.
 4. **Reassess and reassign.** When a robot becomes unavailable or a target changes, invalidate affected assignments and compute a revised allocation using capabilities, travel cost, task priority, and energy constraints.
-5. **Verify before resuming.** Validate the revised plan, prevent duplicate task ownership, and require additional observation or human review when evidence is insufficient. Low-level safety mechanisms remain active throughout replanning. The language model would interpret instructions and propose semantic task structures. Deterministic checks and task-allocation logic would constrain the executable result. This separation makes the system easier to test and limits the consequences of unsupported model output.
+5. **Verify before resuming.** Validate the revised plan, prevent duplicate task ownership, and require additional observation or human review when evidence is insufficient. Low-level safety mechanisms remain active throughout replanning.
+
+The language model would interpret instructions and propose semantic task structures. Deterministic checks and task-allocation logic would constrain the executable result. This separation makes the system easier to test and limits the consequences of unsupported model output.
 
 ### Proposed Evaluation Plan
 
@@ -226,7 +245,15 @@ The proposed experiments would compare a static-plan baseline, a reactive reassi
 
 The main measures would be:
 
-Mission completion rate: fraction of required tasks completed correctly. Recovery time: time from detecting a disturbance to restoring valid task execution. Reassignment overhead: additional travel or execution cost after a disturbance. Stale-state failures: number of assignments made using information that should have been invalidated. Duplicate or conflicting assignments: tasks simultaneously owned by multiple robots or assigned to unavailable robots. Safety violations: collisions or execution of tasks that fail required safety checks. Communication overhead: volume and frequency of state updates needed for coordination. Results should be reported across multiple runs with variability, rather than from a single successful demonstration. Ablation tests could remove map-freshness checks, capability monitoring, or feedback-driven replanning individually to measure their contributions. The evaluation should also record cases where the system stops and requests human intervention rather than assuming autonomous recovery.
+- **Mission completion rate:** fraction of required tasks completed correctly.
+- **Recovery time:** time from detecting a disturbance to restoring valid task execution.
+- **Reassignment overhead:** additional travel or execution cost after a disturbance.
+- **Stale-state failures:** assignments made using information that should have been invalidated.
+- **Duplicate or conflicting assignments:** tasks simultaneously owned by multiple robots or assigned to unavailable robots.
+- **Safety violations:** collisions or execution of tasks that fail required safety checks.
+- **Communication overhead:** volume and frequency of state updates needed for coordination.
+
+Results should be reported across multiple runs with variability, rather than from a single successful demonstration. Ablation tests could remove map-freshness checks, capability monitoring, or feedback-driven replanning individually to measure their contributions. The evaluation should also record cases where the system stops and requests human intervention rather than assuming autonomous recovery.
 
 ### Expected Contribution
 
@@ -252,6 +279,9 @@ Time spent was not tracked contemporaneously. The following figures are retrospe
 |---|---:|
 | Task 2.1 — Multi-robot simulation, sensing, and mapping | 14 hours |
 | Task 2.2 — Semantic planning and event handling | 7 hours |
+| Task 2.3 — Long-term deployment challenges and literature analysis | 3 hours |
+| Task 2.4 — Open research problem and proposed approach | 5 hours |
+| **Total** | **29 hours** |
 
 # 4. AI Assistance and Author Verification
 
